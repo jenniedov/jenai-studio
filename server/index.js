@@ -1,0 +1,166 @@
+// JenAI Studio — single Node process. Serves the built React UI, the /api/*
+// routes, the adapter layer, and the local generated files. One port, one
+// command, one URL.
+
+import express from 'express';
+import { readFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import {
+  ensureDirs, getConfig, setKey, maskedKeyStatus, saveSettings,
+  getProjects, getArchivedProjects, addProject, reorderProjects, setProjectArchived, deleteProject,
+  getJobs, getJob, deleteJob, filesDir, dataDir,
+  saveUpload, flushJobs, backfillPosters,
+} from './storage/store.js';
+import { listAdapters } from './adapters/index.js';
+import {
+  createJobs, processJob, estimateCost, publicJob, BATCH_CAP,
+} from './engine.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(here, '..');
+const PORT = Number(process.env.PORT) || 4317;
+
+ensureDirs();
+
+const models = JSON.parse(readFileSync(join(ROOT, 'config', 'models.json'), 'utf8'));
+const branding = JSON.parse(readFileSync(join(ROOT, 'config', 'branding.json'), 'utf8'));
+const legalHe = readFileSync(join(ROOT, 'config', 'legal.he.md'), 'utf8');
+
+const app = express();
+app.use(express.json({ limit: '25mb' }));
+
+// --- API -------------------------------------------------------------------
+
+const api = express.Router();
+
+api.get('/health', (_req, res) => res.json({ ok: true, name: branding.name, port: PORT }));
+
+api.get('/config', (_req, res) => {
+  const cfg = getConfig();
+  res.json({ branding, settings: cfg.settings, legal: { he: legalHe }, batchCap: BATCH_CAP });
+});
+
+api.get('/models', (_req, res) => res.json(models));
+
+// Configured providers + whether a key exists (never the key itself).
+api.get('/providers', (_req, res) => {
+  const status = maskedKeyStatus();
+  const providers = listAdapters().map((p) => ({
+    ...p,
+    hasKey: Boolean(status[p.id]?.hasKey),
+    last4: status[p.id]?.last4 || null,
+  }));
+  res.json({ providers });
+});
+
+api.post('/keys', (req, res) => {
+  const { provider, key } = req.body || {};
+  if (!provider) return res.status(400).json({ error: 'provider is required' });
+  const status = setKey(provider, key);
+  res.json({ ok: true, providers: status });
+});
+
+api.get('/projects', (_req, res) => res.json({ projects: getProjects(), archived: getArchivedProjects() }));
+api.post('/projects', (req, res) => res.json({ projects: addProject(req.body?.name) }));
+api.post('/projects/order', (req, res) => res.json({ projects: reorderProjects(req.body?.projects || []) }));
+api.post('/projects/archive', (req, res) => res.json(setProjectArchived(req.body?.name, !!req.body?.archived)));
+api.delete('/projects/:name', (req, res) => res.json(deleteProject(req.params.name)));
+
+api.post('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
+
+// Pre-generation cost estimate.
+api.post('/estimate', (req, res) => {
+  const { model, num_outputs } = req.body || {};
+  res.json({ cost: estimateCost(model, Number(num_outputs) || 1), batchCap: BATCH_CAP });
+});
+
+// The universal generate endpoint. Creates jobs immediately, processes in the
+// background, and returns the queued jobs so the UI/Claude can poll them.
+api.post('/generate', (req, res) => {
+  const body = req.body || {};
+  if (!body.task || !body.model || !body.provider) {
+    return res.status(400).json({ error: 'task, model and provider are required' });
+  }
+  if (!body.prompt && !(body.input_images?.length)) {
+    return res.status(400).json({ error: 'a prompt or an input image is required' });
+  }
+  let created;
+  try {
+    created = createJobs(body);
+  } catch (bad) {
+    return res.status(bad.httpStatus || 400).json({ error: bad.message || 'bad request', detail: bad.error || null });
+  }
+  // Fire-and-forget processing; each job updates its own status.
+  for (const job of created.jobs) {
+    processJob(job.job_id).catch(() => { /* engine already records failures */ });
+  }
+  res.json({ jobs: created.jobs.map(publicJob) });
+});
+
+api.get('/jobs', (req, res) => {
+  const { project, type, limit, offset } = req.query;
+  const { jobs, total } = getJobs(project, {
+    type: type || undefined,
+    limit: limit != null ? Number(limit) : undefined,
+    offset: offset != null ? Number(offset) : 0,
+  });
+  res.json({ jobs: jobs.map(publicJob), total });
+});
+
+api.get('/jobs/:id', (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: 'not found' });
+  res.json(publicJob(job));
+});
+
+api.delete('/jobs/:id', (req, res) => {
+  const ok = deleteJob(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'not found' });
+  res.json({ ok: true });
+});
+
+// Upload a reference image (base64 data URL) → returns a local URL usable as
+// an input_image for image_to_x / reference_to_x generation.
+api.post('/upload', (req, res) => {
+  try {
+    const name = saveUpload(req.body?.dataUrl || '');
+    res.json({ local_url: `/api/files/${name}`, file_name: name });
+  } catch (e) {
+    res.status(400).json({ error: String(e.message || e) });
+  }
+});
+
+// Serve generated media from the local files folder.
+api.use('/files', express.static(filesDir(), { fallthrough: false }));
+
+app.use('/api', api);
+
+// --- Static UI -------------------------------------------------------------
+
+const dist = join(ROOT, 'web', 'dist');
+if (existsSync(dist)) {
+  app.use(express.static(dist));
+  // SPA fallback for client-side routes.
+  app.get('*', (_req, res) => res.sendFile(join(dist, 'index.html')));
+} else {
+  app.get('*', (_req, res) => res.status(200).send(
+    '<h1>JenAI Studio</h1><p>The UI is not built yet. Run <code>npm run build</code>, '
+    + 'or <code>npm run dev</code> for hot-reload development.</p>',
+  ));
+}
+
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => { flushJobs(); process.exit(0); });
+}
+process.on('exit', flushJobs);
+
+app.listen(PORT, () => {
+  // Backfill posters for any videos generated before thumbnails existed.
+  backfillPosters().then((n) => { if (n) console.log(`  ✦ generated ${n} video thumbnail(s)`); });
+  console.log('');
+  console.log(`  ✦ ${branding.name} is running`);
+  console.log(`  ✦ open   http://localhost:${PORT}`);
+  console.log(`  ✦ data   ${dataDir()}`);
+  console.log('');
+});

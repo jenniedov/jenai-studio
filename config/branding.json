@@ -1,0 +1,28 @@
+{
+  "name": "JenAI Studio",
+  "logoText": "JenAI",
+  "defaultLocale": "he",
+  "locales": ["he", "en"],
+  "tabs": ["home", "images", "videos", "projects", "settings"],
+  "colors": {
+    "page": "#FBF0DE",
+    "surface": "#ffffff",
+    "glass": "rgba(255,255,255,.82)",
+    "ink": "#241016",
+    "ink-soft": "rgba(36,16,22,.72)",
+    "ink-faint": "rgba(36,16,22,.52)",
+    "border": "#E6D3B9",
+    "border-strong": "#241016",
+    "orange": "#F26A1B",
+    "pink": "#E93D82",
+    "magenta": "#C6208A",
+    "yellow": "#F6B300",
+    "gold": "#E8A400"
+  },
+  "radius": { "sm": "8px", "card": "16px", "pill": "9999px" },
+  "shell": "linear-gradient(160deg,#fff, rgba(233,61,130,.35) 55%, rgba(246,179,0,.4))",
+  "fonts": {
+    "body": "Inter, system-ui, -apple-system, sans-serif",
+    "chunky": "\"Arial Black\", \"Helvetica Neue\", Impact, system-ui, sans-serif"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "AUTH_MISSING": {
+    "title": "No key yet",
+    "body": "You haven't added a key for {provider} yet. Add one and you're generating.",
+    "action": "What do I do now?",
+    "claudePrompt": "In my JenAI Studio project I haven't added a key for {provider} yet. Which provider should I sign up for to get free credits, and how do I get the key and paste it into the app's settings?"
+  },
+  "AUTH_INVALID": {
+    "title": "That key didn't work",
+    "body": "{provider} rejected the key. It's probably wrong or expired.",
+    "action": "What do I do now?",
+    "claudePrompt": "In JenAI Studio my {provider} API key was rejected as invalid. Help me generate a new key and paste it into the app's settings."
+  },
+  "INSUFFICIENT_CREDITS": {
+    "title": "You're out of credits",
+    "body": "{provider} says there's no credit left on this key.",
+    "action": "What do I do now?",
+    "claudePrompt": "In my JenAI Studio project, provider {provider} says I'm out of credits. Walk me through topping up, or switching to a provider that still has free credits."
+  },
+  "RATE_LIMITED": {
+    "title": "Too fast — take a breath",
+    "body": "{provider} got too many requests at once. Wait a moment and try again.",
+    "action": "What do I do now?",
+    "claudePrompt": "JenAI Studio hit a rate limit on {provider}. Explain what that means and how to space out my batch so it doesn't happen again."
+  },
+  "BAD_REQUEST": {
+    "title": "Something in the request was off",
+    "body": "{provider} couldn't read this request. The model or a setting may not be supported.",
+    "action": "What do I do now?",
+    "claudePrompt": "In JenAI Studio a generation on {provider} with model {model} failed as a bad request. Help me figure out which setting is unsupported and fix it."
+  },
+  "MODERATION_BLOCKED": {
+    "title": "This prompt was blocked",
+    "body": "{provider}'s content filter blocked this prompt. Try rewording it.",
+    "action": "What do I do now?",
+    "claudePrompt": "My prompt in JenAI Studio was blocked by {provider}'s content filter. Help me reword it so it passes while keeping the same idea."
+  },
+  "PROVIDER_DOWN": {
+    "title": "The model is busy",
+    "body": "{provider} isn't responding right now. It usually passes on its own.",
+    "action": "What do I do now?",
+    "claudePrompt": "JenAI Studio got a 'model busy' or server error from {provider}. Should I retry, wait, or switch to a different model?"
+  },
+  "TIMEOUT": {
+    "title": "The model is busy",
+    "body": "This one took too long. Try again in a moment.",
+    "action": "What do I do now?",
+    "claudePrompt": "A generation in JenAI Studio on {provider} timed out. Should I retry, wait, or switch to a faster model?"
+  },
+  "UNKNOWN": {
+    "title": "Something went wrong",
+    "body": "Something unexpected happened with {provider}.",
+    "action": "What do I do now?",
+    "claudePrompt": "A generation in JenAI Studio on {provider} with model {model} failed with an error I don't understand. Here are the technical details — help me figure out what to do."
+  }
+}

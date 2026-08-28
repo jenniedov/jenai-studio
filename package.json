@@ -1,0 +1,29 @@
+{
+  "name": "jenai-studio",
+  "version": "0.1.0",
+  "description": "A local, white-labelable GenAI studio for images and videos through bring-your-own-key providers.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "npm run build && node server/index.js",
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "vite --config web/vite.config.js",
+    "dev:api": "node --watch server/index.js",
+    "build": "vite build --config web/vite.config.js",
+    "smoke": "node scripts/smoke.mjs",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.2"
+  }
+}
