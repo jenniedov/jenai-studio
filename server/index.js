@@ -14,6 +14,7 @@ import {
 } from './storage/store.js';
 import { listAdapters } from './adapters/index.js';
 import { probeOpenaiEligibility } from './adapters/openrouter.js';
+import { refreshFeed, priceTable, feedMeta } from './feed/prices.js';
 import {
   createJobs, processJob, estimateCost, publicJob, BATCH_CAP,
 } from './engine.js';
@@ -69,6 +70,13 @@ api.post('/projects/archive', (req, res) => res.json(setProjectArchived(req.body
 api.delete('/projects/:name', (req, res) => res.json(deleteProject(req.params.name)));
 
 api.post('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
+
+// Real per-provider prices from the jenai.house feed (cached, refreshed daily).
+api.get('/prices', (_req, res) => res.json({ ...feedMeta(), table: priceTable() }));
+api.post('/prices/refresh', async (_req, res) => {
+  const r = await refreshFeed({ force: true });
+  res.json({ ...r, ...feedMeta(), table: priceTable() });
+});
 
 // Verify whether OpenAI-on-OpenRouter actually works on this account (the data
 // policy is a per-account setting we can't see any other way). Persists the
@@ -174,6 +182,8 @@ process.on('exit', flushJobs);
 app.listen(PORT, () => {
   // Backfill posters for any videos generated before thumbnails existed.
   backfillPosters().then((n) => { if (n) console.log(`  ✦ generated ${n} video thumbnail(s)`); });
+  // Pull the price feed if the cache is stale (at most once a day).
+  refreshFeed().then((r) => { if (r.reason === 'refreshed') console.log(`  ✦ price feed updated (${r.asOf})`); });
   console.log('');
   console.log(`  ✦ ${branding.name} is running`);
   console.log(`  ✦ open   http://localhost:${PORT}`);

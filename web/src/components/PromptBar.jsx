@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api.js';
-import { useStudio, availableProviders, resolveProvider, unitCost } from '../lib/studio.jsx';
+import { useStudio, availableProviders, resolveProvider, unitCost, priceFor } from '../lib/studio.jsx';
 import ModelPicker from './ModelPicker.jsx';
 import PillSelect from './PillSelect.jsx';
 import AspectIcon from './AspectIcon.jsx';
@@ -9,7 +9,7 @@ import AspectIcon from './AspectIcon.jsx';
 // reference gen-studio, where both use the same bar + grid).
 export default function PromptBar({ type }) {
   const {
-    t, isRtl, imageModels, videoModels, providers, currentProject, openrouterOpenaiOk,
+    t, isRtl, imageModels, videoModels, providers, currentProject, openrouterOpenaiOk, prices,
     imageRefs, setImageRefs, recreate, setRecreate, videoRef, setVideoRef,
   } = useStudio();
   const isVideo = type === 'video';
@@ -116,11 +116,32 @@ export default function PromptBar({ type }) {
     });
   }, [modelKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const cost = useMemo(() => {
+  const money = (n) => (n < 0.1 ? `$${n.toFixed(3)}` : `$${n.toFixed(2)}`);
+
+  // Real per-unit price for a provider from the jenai.house feed (falls back to
+  // the rough config price). Video is priced per second, images per image.
+  const unitPriceFor = (providerId) => {
+    const feed = priceFor(prices, modelKey, providerId, resolution);
+    if (feed) return { price: feed.price, unit: feed.unit, deal: feed.isTemporary || Boolean(feed.activeDeal) };
     const u = unitCost(model);
-    if (u == null) return null;
-    return (u * (isVideo ? 1 : count)).toFixed(2);
-  }, [model, count, isVideo]);
+    return u == null ? null : { price: u, unit: isVideo ? 'second' : 'image', deal: false };
+  };
+
+  // Short per-unit label for a provider pill/option, e.g. "$0.25/s" or "$0.03/img".
+  const unitLabel = (providerId) => {
+    const p = unitPriceFor(providerId);
+    if (!p) return '';
+    return `${money(p.price)}${p.unit === 'second' ? '/s' : '/img'}`;
+  };
+
+  // Total for the current setup: per second × length (video) or per image × count.
+  const cost = useMemo(() => {
+    const p = unitPriceFor(provider);
+    if (!p) return null;
+    const total = isVideo ? p.price * Number(duration) : p.price * Number(count);
+    return total.toFixed(2);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prices, modelKey, provider, resolution, count, duration, isVideo]);
 
   const MAX_REFS = 10;
 
@@ -210,9 +231,13 @@ export default function PromptBar({ type }) {
 
         <div className="ctrlrow">
           <ModelPicker models={models} providers={providers} value={modelKey} onPick={setModelKey} kind={type} variant="pill" t={t} />
-          {provs.length > 1 && (
+          {provs.length > 0 && (
             <PillSelect icon="⚑" value={provider}
-              options={provs.map((p) => ({ value: p.id, label: p.hasKey ? p.label : `${p.label} · ${t('prompt.noKey')}` }))}
+              options={provs.map((p) => {
+                const price = unitLabel(p.id);
+                const base = p.hasKey ? p.label : `${p.label} · ${t('prompt.noKey')}`;
+                return { value: p.id, label: price ? `${base} · ${price}` : base };
+              })}
               onChange={setProvider} />
           )}
           {model?.aspectRatios?.length > 0 && (

@@ -18,10 +18,10 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const [config, models, providers, projects] = await Promise.all([
-        api.config(), api.models(), api.providers(), api.projects(),
+      const [config, models, providers, projects, prices] = await Promise.all([
+        api.config(), api.models(), api.providers(), api.projects(), api.prices().catch(() => ({ table: {} })),
       ]);
-      setInitial({ config, models, providers: providers.providers, projects: projects.projects });
+      setInitial({ config, models, providers: providers.providers, projects: projects.projects, prices });
     })();
   }, []);
 

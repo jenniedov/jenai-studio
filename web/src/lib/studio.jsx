@@ -39,12 +39,45 @@ export function unitCost(model) {
   return model?.priceUsd != null ? model.priceUsd : null;
 }
 
+// Match a selected resolution to the best feed variant row, else the cheapest.
+function matchVariant(rows, resolution) {
+  if (!rows?.length) return null;
+  const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
+  const r = norm(resolution);
+  if (r) {
+    const exact = rows.find((x) => norm(x.variant) === r);
+    if (exact) return exact;
+    const token = rows.find((x) => norm(x.variant).split('-').includes(r));
+    if (token) return token;
+  }
+  return rows.reduce((a, b) => (b.price < a.price ? b : a));
+}
+
+// Real price for (model, provider, resolution) from the jenai.house feed, or
+// null if the feed doesn't cover it (caller falls back to the rough config price).
+// unit is 'image' (price per image) or 'second' (price per second of video).
+export function priceFor(prices, modelKey, providerId, resolution) {
+  const entry = prices?.[modelKey];
+  if (!entry) return null;
+  const row = matchVariant(entry.providers?.[providerId], resolution);
+  if (!row) return null;
+  return {
+    unit: entry.unit,
+    price: row.price,
+    isTemporary: row.isTemporary,
+    temporaryNote: row.temporaryNote,
+    activeDeal: row.activeDeal,
+  };
+}
+
 export function StudioProvider({ initial, children }) {
   const [config] = useState(initial.config);
   const [models] = useState(initial.models);
   const [providers, setProviders] = useState(initial.providers);
   const [projects, setProjects] = useState(initial.projects);
   const [settings, setSettings] = useState(initial.config.settings || {});
+  const [prices, setPrices] = useState(initial.prices?.table || {});
+  const pricesAsOf = initial.prices?.asOf || null;
 
   // Whether OpenAI-on-OpenRouter is actually usable on this account. This is the
   // real, verified state (not a mere checkbox), so the UI can be truthful.
@@ -118,6 +151,7 @@ export function StudioProvider({ initial, children }) {
   const value = {
     config, models, imageModels, videoModels,
     settings, openrouterOpenaiOk, verifyOpenrouter, disableOpenrouterOpenai,
+    prices, pricesAsOf,
     providers, refreshProviders,
     projects, setProjects,
     locale, setLocale, t, isRtl: isRtl(locale),
