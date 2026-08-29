@@ -328,4 +328,26 @@ function pickExt(url, type) {
   return type === 'video' ? '.mp4' : '.png';
 }
 
+const MIME = {
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp', '.gif': 'image/gif', '.mp4': 'video/mp4', '.webm': 'video/webm',
+};
+
+// Turn a local reference URL (/api/files/<name>, possibly with a localhost host)
+// into a base64 data URL by reading the file off disk. External providers can't
+// fetch our localhost URLs, so references must be inlined. Non-local URLs (real
+// public http(s)) and anything already a data: URL pass through unchanged.
+export function localFileToDataUrl(url) {
+  if (!url || /^data:/i.test(url)) return url;
+  const m = String(url).match(/\/api\/files\/([^/?#]+)$/);
+  if (!m) return url;
+  const name = m[1];
+  const path = join(FILES_DIR, name);
+  if (!existsSync(path)) return url;
+  const ext = (name.match(/\.[a-z0-9]+$/i)?.[0] || '.png').toLowerCase();
+  const mime = MIME[ext] || 'application/octet-stream';
+  const b64 = readFileSync(path).toString('base64');
+  return `data:${mime};base64,${b64}`;
+}
+
 export { DATA_DIR };

@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { getAdapter } from './adapters/index.js';
-import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster, setOpenrouterOpenaiVerified } from './storage/store.js';
+import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster, setOpenrouterOpenaiVerified, localFileToDataUrl } from './storage/store.js';
 import { makeError, codeFromMessage } from './errors/map.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -87,6 +87,11 @@ export async function processJob(jobId) {
   const job = getJob(jobId);
   if (!job) return;
   const req = job._req;
+  // Inline any local reference images as base64 data URLs — external providers
+  // (OpenRouter/Google, Kie, Oxen) can't fetch our localhost file URLs.
+  if (req.input_images?.length) {
+    req.input_images = req.input_images.map((i) => (i?.url ? { ...i, url: localFileToDataUrl(i.url) } : i));
+  }
   const model = findModel(job.model);
   const adapter = getAdapter(job.provider);
   const key = getKey(job.provider);
