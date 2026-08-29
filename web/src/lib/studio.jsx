@@ -8,16 +8,28 @@ export const useStudio = () => useContext(Ctx);
 const LOCALE_KEY = 'jenai.locale';
 const THEME_KEY = 'jenai.theme';
 
-// Providers that have a slug for this model.
-export function availableProviders(model, providers) {
+// Does this model route to OpenAI on OpenRouter? Those endpoints only work when
+// the user has opted into OpenRouter's data-sharing policy (a per-account setting).
+export function needsOpenrouterDataSharing(model) {
+  return /^openai\//.test(model?.providers?.openrouter || '');
+}
+
+// Providers that have a slug for this model. `openrouterDataSharing` gates the
+// OpenAI-on-OpenRouter models: without consent, OpenRouter is hidden for them
+// (they still run on Kie/Oxen), so users never hit the data-policy error.
+export function availableProviders(model, providers, openrouterDataSharing = true) {
   if (!model) return [];
   const slugs = model.providers || {};
-  return providers.filter((p) => slugs[p.id]);
+  return providers.filter((p) => {
+    if (!slugs[p.id]) return false;
+    if (p.id === 'openrouter' && needsOpenrouterDataSharing(model) && !openrouterDataSharing) return false;
+    return true;
+  });
 }
 
 // Best provider for a model: prefer one with a key, else first that can serve it.
-export function resolveProvider(model, providers) {
-  const avail = availableProviders(model, providers);
+export function resolveProvider(model, providers, openrouterDataSharing = true) {
+  const avail = availableProviders(model, providers, openrouterDataSharing);
   return avail.find((p) => p.hasKey) || avail[0] || null;
 }
 
@@ -30,6 +42,16 @@ export function StudioProvider({ initial, children }) {
   const [models] = useState(initial.models);
   const [providers, setProviders] = useState(initial.providers);
   const [projects, setProjects] = useState(initial.projects);
+  const [settings, setSettings] = useState(initial.config.settings || {});
+
+  // OpenRouter data-sharing consent (per install). true = opted in so OpenAI
+  // models are offered; anything else = hidden. Persisted server-side so it's
+  // global across the app and survives reloads.
+  const openrouterConsent = settings.openrouterDataSharing === true;
+  const setOpenrouterConsent = useCallback(async (v) => {
+    const r = await api.saveSettings({ openrouterDataSharing: !!v });
+    setSettings(r.settings || {});
+  }, []);
 
   const [locale, setLocale] = useState(
     () => localStorage.getItem(LOCALE_KEY) || initial.config.branding.defaultLocale || 'he',
@@ -87,6 +109,7 @@ export function StudioProvider({ initial, children }) {
 
   const value = {
     config, models, imageModels, videoModels,
+    settings, openrouterConsent, setOpenrouterConsent,
     providers, refreshProviders,
     projects, setProjects,
     locale, setLocale, t, isRtl: isRtl(locale),

@@ -38,6 +38,10 @@ export const openrouter = {
           model: ctx.providerSlug,
           messages: [{ role: 'user', content }],
           modalities: ['image', 'text'],
+          // OpenAI image models route only when the account allows data sharing.
+          // The user opts in via the in-app consent (and enables it on their
+          // OpenRouter account); passing this makes routing explicit.
+          ...(/^openai\//.test(ctx.providerSlug) ? { provider: { data_collection: 'allow' } } : {}),
         }),
       });
     } catch (e) {

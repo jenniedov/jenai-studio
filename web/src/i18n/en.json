@@ -119,6 +119,16 @@
     "gotoAgent": "Go ahead now to your coding agent, ask it, and paste this there.",
     "technical": "Technical details"
   },
+  "consent": {
+    "title": "Use OpenAI models via OpenRouter?",
+    "body": "Some OpenRouter models (OpenAI's GPT Image) only run if you let OpenRouter share your prompts with the provider. That's a setting on your own OpenRouter account. If you agree, we'll open the page so you can switch it on. If not, no problem — the Google (Nano Banana) models work without it.",
+    "yes": "Yes, open the setting",
+    "no": "No thanks",
+    "settingsLabel": "OpenAI models via OpenRouter",
+    "settingsHint": "You must also switch this on in OpenRouter's settings.",
+    "on": "On",
+    "off": "Off"
+  },
   "common": { "close": "Close", "cancel": "Cancel", "image": "Image", "video": "Video", "confirm": "Yes, go" },
   "confirmBatch": { "title": "Generate {count}?", "body": "This will make {count} at about ${cost}." }
 }

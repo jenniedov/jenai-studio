@@ -119,6 +119,16 @@
     "gotoAgent": "עכשיו הולכים ל-coding agent שלכם\nמבקשים ומדביקים לו את זה",
     "technical": "פרטים טכניים"
   },
+  "consent": {
+    "title": "להשתמש גם במודלים של OpenAI דרך OpenRouter",
+    "body": "חלק מהמודלים ב-OpenRouter (GPT Image של OpenAI) עובדים רק אם מאשרים ל-OpenRouter לשתף את הפרומפטים עם הספק\nזאת הגדרה בחשבון OpenRouter שלך\nאם מאשרים נפתח לך העמוד להדליק את זה\nאם לא אין בעיה יש את המודלים של Google (Nano Banana) שעובדים בלי זה",
+    "yes": "כן פתחו לי את ההגדרה",
+    "no": "לא תודה",
+    "settingsLabel": "מודלים של OpenAI דרך OpenRouter",
+    "settingsHint": "צריך גם להדליק את זה בהגדרות של OpenRouter",
+    "on": "דלוק",
+    "off": "כבוי"
+  },
   "common": { "close": "סגירה", "cancel": "ביטול", "image": "תמונה", "video": "סרטון", "confirm": "כן קדימה" },
   "confirmBatch": { "title": "מייצרים {count}", "body": "זה ייצר {count} בערך ב-${cost}" }
 }

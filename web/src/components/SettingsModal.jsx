@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
 import { api } from '../lib/api.js';
 import { useStudio } from '../lib/studio.jsx';
+import { useDialog } from './Dialog.jsx';
+import { askOpenrouterConsent, OPENROUTER_PRIVACY_URL } from '../lib/consent.js';
 
 export default function SettingsModal({ onClose }) {
-  const { t, providers, refreshProviders, locale, setLocale, theme, setTheme } = useStudio();
+  const {
+    t, providers, refreshProviders, locale, setLocale, theme, setTheme,
+    openrouterConsent, setOpenrouterConsent,
+  } = useStudio();
+  const dialog = useDialog();
+  const hasOpenrouter = providers.some((p) => p.id === 'openrouter');
+
+  const onKeySaved = async (providerId) => {
+    if (providerId === 'openrouter' && !openrouterConsent) {
+      await askOpenrouterConsent({ t, dialog, setOpenrouterConsent });
+    }
+  };
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -13,10 +26,33 @@ export default function SettingsModal({ onClose }) {
           <h2>{t('settings.title')}</h2>
 
           <div className="block-label" style={{ marginTop: 4 }}>{t('settings.keys')}</div>
-          {providers.map((p) => <KeyRow key={p.id} t={t} provider={p} onChanged={refreshProviders} />)}
+          {providers.map((p) => <KeyRow key={p.id} t={t} provider={p} onChanged={refreshProviders} onKeySaved={onKeySaved} />)}
           <p style={{ color: 'var(--txt-faint)', fontSize: 13, marginTop: 14, whiteSpace: 'pre-line', lineHeight: 1.5 }}>
             {t('settings.privacy')}
           </p>
+
+          {hasOpenrouter && (
+            <div className="settings-key-row" style={{ marginTop: 6 }}>
+              <div>
+                <strong>{t('consent.settingsLabel')}</strong>{' '}
+                <span className={`badge ${openrouterConsent ? 'badge-ok' : 'badge-off'}`}>
+                  {openrouterConsent ? t('consent.on') : t('consent.off')}
+                </span>
+                <div style={{ color: 'var(--txt-faint)', fontSize: 12, marginTop: 4 }}>
+                  <a className="link" href={OPENROUTER_PRIVACY_URL} target="_blank" rel="noreferrer">{t('consent.settingsHint')} ↗</a>
+                </div>
+              </div>
+              <div className="seg" style={{ width: 'fit-content' }}>
+                <button className={openrouterConsent ? 'active' : ''}
+                  onClick={() => { if (!openrouterConsent) askOpenrouterConsent({ t, dialog, setOpenrouterConsent }); }}>
+                  {t('consent.on')}
+                </button>
+                <button className={!openrouterConsent ? 'active' : ''} onClick={() => setOpenrouterConsent(false)}>
+                  {t('consent.off')}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="block-label" style={{ marginTop: 20 }}>{t('settings.language')}</div>
           <div className="seg" style={{ width: 'fit-content' }}>
@@ -39,13 +75,15 @@ export default function SettingsModal({ onClose }) {
   );
 }
 
-function KeyRow({ t, provider, onChanged }) {
+function KeyRow({ t, provider, onChanged, onKeySaved }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
 
   const save = async () => {
-    await api.setKey(provider.id, value.trim());
+    const v = value.trim();
+    await api.setKey(provider.id, v);
     setEditing(false); setValue(''); onChanged();
+    if (v) await onKeySaved?.(provider.id);
   };
   const remove = async () => { await api.setKey(provider.id, ''); onChanged(); };
 
