@@ -7,12 +7,13 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
-  ensureDirs, getConfig, setKey, maskedKeyStatus, saveSettings,
+  ensureDirs, getConfig, getKey, setKey, maskedKeyStatus, saveSettings, setOpenrouterOpenaiVerified,
   getProjects, getArchivedProjects, addProject, reorderProjects, setProjectArchived, deleteProject,
   getJobs, getJob, deleteJob, filesDir, dataDir,
   saveUpload, flushJobs, backfillPosters,
 } from './storage/store.js';
 import { listAdapters } from './adapters/index.js';
+import { probeOpenaiEligibility } from './adapters/openrouter.js';
 import {
   createJobs, processJob, estimateCost, publicJob, BATCH_CAP,
 } from './engine.js';
@@ -68,6 +69,21 @@ api.post('/projects/archive', (req, res) => res.json(setProjectArchived(req.body
 api.delete('/projects/:name', (req, res) => res.json(deleteProject(req.params.name)));
 
 api.post('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
+
+// Verify whether OpenAI-on-OpenRouter actually works on this account (the data
+// policy is a per-account setting we can't see any other way). Persists the
+// result so the UI only shows OpenRouter for GPT Image when it truly works.
+api.post('/providers/openrouter/verify', async (_req, res) => {
+  const key = getKey('openrouter');
+  if (!key) return res.json({ eligible: false, reason: 'no_key', settings: getConfig().settings });
+  const r = await probeOpenaiEligibility(key);
+  // Only change the stored flag on a definite yes/no — leave it untouched when
+  // the probe is inconclusive (transient error), so a hiccup never lies.
+  const settings = typeof r.eligible === 'boolean'
+    ? setOpenrouterOpenaiVerified(r.eligible)
+    : getConfig().settings;
+  res.json({ eligible: r.eligible, reason: r.reason, settings });
+});
 
 // Pre-generation cost estimate.
 api.post('/estimate', (req, res) => {

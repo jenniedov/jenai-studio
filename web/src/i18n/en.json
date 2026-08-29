@@ -120,14 +120,22 @@
     "technical": "Technical details"
   },
   "consent": {
-    "title": "Use OpenAI models via OpenRouter?",
-    "body": "Some OpenRouter models (OpenAI's GPT Image) only run if you let OpenRouter share your prompts with the provider. That's a setting on your own OpenRouter account. If you agree, we'll open the page so you can switch it on. If not, no problem — the Google (Nano Banana) models work without it.",
-    "yes": "Yes, open the setting",
-    "no": "No thanks",
+    "title": "Turn on OpenAI models via OpenRouter",
+    "body": "Some OpenRouter models (OpenAI's GPT Image) are blocked by default by a privacy setting on your OpenRouter account. In OpenRouter → Privacy → Zero Data Retention, turn the OpenAI toggle OFF. That lets OpenAI's endpoints run (they may retain your prompt). We'll open the page, then check whether it works. Don't want to? The Google (Nano Banana) models work with nothing extra.",
+    "yes": "Open the setting",
+    "no": "Later",
     "settingsLabel": "OpenAI models via OpenRouter",
-    "settingsHint": "You must also switch this on in OpenRouter's settings.",
-    "on": "On",
-    "off": "Off"
+    "settingsHint": "Open OpenRouter privacy settings",
+    "working": "Working",
+    "needsSetup": "Needs a setting in OpenRouter",
+    "check": "Check",
+    "turnOn": "Turn on",
+    "turnOff": "Turn off",
+    "checking": "Checking…",
+    "workingTitle": "Nice — it works",
+    "workingBody": "OpenAI models via OpenRouter are on now.",
+    "failHint": "Still off. In OpenRouter → Privacy → Zero Data Retention, turn the OpenAI toggle off, then come back and press Check.",
+    "inconclusive": "Couldn't check right now — try again in a moment."
   },
   "common": { "close": "Close", "cancel": "Cancel", "image": "Image", "video": "Video", "confirm": "Yes, go" },
   "confirmBatch": { "title": "Generate {count}?", "body": "This will make {count} at about ${cost}." }

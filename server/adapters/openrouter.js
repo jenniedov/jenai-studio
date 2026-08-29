@@ -57,8 +57,10 @@ export const openrouter = {
       // OpenRouter blocks some models (notably OpenAI image models) unless the
       // account's data policy allows them. Give a clear, actionable message.
       if (/no endpoints available|data policy|guardrail/i.test(msg)) {
-        return { error: ctx.makeError('BAD_REQUEST', { status, raw: { message:
-          "OpenRouter blocked this model for your account's data policy. Open https://openrouter.ai/settings/privacy and enable the prompt-training / data-sharing option so OpenAI image models (like GPT Image) can run — or pick a Google model (Nano Banana / Gemini) on OpenRouter, which works without that. Original: " + msg } }) };
+        const e = ctx.makeError('BAD_REQUEST', { status, raw: { message:
+          "OpenRouter is blocking this model for your account's data policy. Open https://openrouter.ai/settings/privacy → Zero Data Retention and turn the OpenAI toggle OFF so OpenAI image models (like GPT Image) can run — or pick a Google model (Nano Banana / Gemini) on OpenRouter, which works without that. Original: " + msg } });
+        e.openrouterDataPolicy = true; // lets the engine mark this account not-eligible
+        return { error: e };
       }
       if (/moderat|content|safety|flagged/i.test(et + msg)) code = 'MODERATION_BLOCKED';
       else if (status === 401 || status === 403) code = 'AUTH_INVALID';
@@ -77,3 +79,38 @@ export const openrouter = {
     return { done: true, outputs: [{ type: 'image', url }] };
   },
 };
+
+// Probe whether OpenAI-on-OpenRouter is reachable on this account. Eligibility
+// is purely "not blocked by the account's data policy" — so we send a tiny
+// TEXT-only request (max_tokens:1, no image) to the OpenAI image endpoint: it
+// hits the same first-party-OpenAI data-policy gate but generates no image, so
+// the check is free. A data-policy 404 means not eligible; any 200 means
+// eligible (even if the model returns nothing). Other failures are inconclusive
+// (eligible: null) so a transient hiccup never wrongly flips the stored state.
+export async function probeOpenaiEligibility(key) {
+  if (!key) return { eligible: false, reason: 'no_key' };
+  try {
+    const res = await fetch(`${BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost',
+        'X-Title': 'JenAI Studio',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-5-image-mini',
+        messages: [{ role: 'user', content: 'hi' }],
+        max_tokens: 1,
+        provider: { data_collection: 'allow' },
+      }),
+    });
+    if (res.ok) return { eligible: true, reason: 'ok' };
+    const body = await res.json().catch(() => null);
+    const msg = body?.error?.message || '';
+    if (/no endpoints available|data policy|guardrail/i.test(msg)) return { eligible: false, reason: 'data_policy' };
+    return { eligible: null, reason: `http_${res.status}` }; // inconclusive
+  } catch {
+    return { eligible: null, reason: 'network' }; // inconclusive
+  }
+}

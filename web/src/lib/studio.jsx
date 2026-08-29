@@ -9,27 +9,29 @@ const LOCALE_KEY = 'jenai.locale';
 const THEME_KEY = 'jenai.theme';
 
 // Does this model route to OpenAI on OpenRouter? Those endpoints only work when
-// the user has opted into OpenRouter's data-sharing policy (a per-account setting).
+// the account's OpenRouter data policy allows them (a per-account setting we
+// can't set from here) — so we only surface them once verified to actually work.
 export function needsOpenrouterDataSharing(model) {
   return /^openai\//.test(model?.providers?.openrouter || '');
 }
 
-// Providers that have a slug for this model. `openrouterDataSharing` gates the
-// OpenAI-on-OpenRouter models: without consent, OpenRouter is hidden for them
-// (they still run on Kie/Oxen), so users never hit the data-policy error.
-export function availableProviders(model, providers, openrouterDataSharing = true) {
+// Providers that have a slug for this model. `openrouterOpenaiOk` gates the
+// OpenAI-on-OpenRouter models: until verified working on this account, OpenRouter
+// is hidden for them (they still run on Kie/Oxen), so the UI never claims a
+// provider works when it doesn't.
+export function availableProviders(model, providers, openrouterOpenaiOk = true) {
   if (!model) return [];
   const slugs = model.providers || {};
   return providers.filter((p) => {
     if (!slugs[p.id]) return false;
-    if (p.id === 'openrouter' && needsOpenrouterDataSharing(model) && !openrouterDataSharing) return false;
+    if (p.id === 'openrouter' && needsOpenrouterDataSharing(model) && !openrouterOpenaiOk) return false;
     return true;
   });
 }
 
 // Best provider for a model: prefer one with a key, else first that can serve it.
-export function resolveProvider(model, providers, openrouterDataSharing = true) {
-  const avail = availableProviders(model, providers, openrouterDataSharing);
+export function resolveProvider(model, providers, openrouterOpenaiOk = true) {
+  const avail = availableProviders(model, providers, openrouterOpenaiOk);
   return avail.find((p) => p.hasKey) || avail[0] || null;
 }
 
@@ -44,12 +46,18 @@ export function StudioProvider({ initial, children }) {
   const [projects, setProjects] = useState(initial.projects);
   const [settings, setSettings] = useState(initial.config.settings || {});
 
-  // OpenRouter data-sharing consent (per install). true = opted in so OpenAI
-  // models are offered; anything else = hidden. Persisted server-side so it's
-  // global across the app and survives reloads.
-  const openrouterConsent = settings.openrouterDataSharing === true;
-  const setOpenrouterConsent = useCallback(async (v) => {
-    const r = await api.saveSettings({ openrouterDataSharing: !!v });
+  // Whether OpenAI-on-OpenRouter is actually usable on this account. This is the
+  // real, verified state (not a mere checkbox), so the UI can be truthful.
+  const openrouterOpenaiOk = settings.openrouterOpenaiVerified === true;
+  // Ask the server to probe the account and refresh the flag from the truth.
+  const verifyOpenrouter = useCallback(async () => {
+    const r = await api.verifyOpenrouter();
+    if (r.settings) setSettings(r.settings);
+    return r;
+  }, []);
+  // Manually turn it off (hide the models) without touching the OpenRouter account.
+  const disableOpenrouterOpenai = useCallback(async () => {
+    const r = await api.saveSettings({ openrouterOpenaiVerified: false });
     setSettings(r.settings || {});
   }, []);
 
@@ -109,7 +117,7 @@ export function StudioProvider({ initial, children }) {
 
   const value = {
     config, models, imageModels, videoModels,
-    settings, openrouterConsent, setOpenrouterConsent,
+    settings, openrouterOpenaiOk, verifyOpenrouter, disableOpenrouterOpenai,
     providers, refreshProviders,
     projects, setProjects,
     locale, setLocale, t, isRtl: isRtl(locale),

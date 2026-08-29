@@ -26,6 +26,7 @@ export const api = {
   deleteProject: (name) => jsend(`/projects/${encodeURIComponent(name)}`, 'DELETE'),
   setKey: (provider, key) => jsend('/keys', 'POST', { provider, key }),
   saveSettings: (patch) => jsend('/settings', 'POST', patch),
+  verifyOpenrouter: () => jsend('/providers/openrouter/verify', 'POST'),
   estimate: (model, num_outputs) => jsend('/estimate', 'POST', { model, num_outputs }),
   generate: (req) => jsend('/generate', 'POST', req),
   upload: (dataUrl) => jsend('/upload', 'POST', { dataUrl }),

@@ -9,7 +9,7 @@ import AspectIcon from './AspectIcon.jsx';
 // reference gen-studio, where both use the same bar + grid).
 export default function PromptBar({ type }) {
   const {
-    t, isRtl, imageModels, videoModels, providers, currentProject, openrouterConsent,
+    t, isRtl, imageModels, videoModels, providers, currentProject, openrouterOpenaiOk,
     imageRefs, setImageRefs, recreate, setRecreate, videoRef, setVideoRef,
   } = useStudio();
   const isVideo = type === 'video';
@@ -34,9 +34,9 @@ export default function PromptBar({ type }) {
     () => (saved.modelKey && models.some((m) => m.key === saved.modelKey) ? saved.modelKey : models[0]?.key || ''),
   );
   const model = models.find((m) => m.key === modelKey) || models[0];
-  const provs = availableProviders(model, providers, openrouterConsent);
+  const provs = availableProviders(model, providers, openrouterOpenaiOk);
 
-  const [provider, setProvider] = useState(() => saved.provider || resolveProvider(model, providers, openrouterConsent)?.id || '');
+  const [provider, setProvider] = useState(() => saved.provider || resolveProvider(model, providers, openrouterOpenaiOk)?.id || '');
   const [prompt, setPrompt] = useState(() => saved.prompt || '');
   const [aspect, setAspect] = useState(() => saved.aspect || defaultAspect(model));
   const [resolution, setResolution] = useState(() => saved.resolution ?? (model?.resolutions?.[0] || ''));
@@ -87,8 +87,8 @@ export default function PromptBar({ type }) {
         if (!isVideo) setImageRefs(refsIn);
       }
       const m = models.find((x) => x.key === (r.model || modelKey));
-      const avail = availableProviders(m, providers, openrouterConsent);
-      const pref = (r.preferProvider && avail.find((p) => p.id === r.preferProvider)) || resolveProvider(m, providers, openrouterConsent);
+      const avail = availableProviders(m, providers, openrouterOpenaiOk);
+      const pref = (r.preferProvider && avail.find((p) => p.id === r.preferProvider)) || resolveProvider(m, providers, openrouterOpenaiOk);
       if (pref) setProvider(pref.id);
     }, 0);
   }, [recreate]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -111,8 +111,8 @@ export default function PromptBar({ type }) {
     setResolution((r) => (model.resolutions?.includes(r) ? r : (model.resolutions?.[0] || '')));
     setDuration((d) => (model.durations?.includes(d) ? d : (model.durations?.[0] || 4)));
     setProvider((p) => {
-      const avail = availableProviders(model, providers, openrouterConsent);
-      return (p && avail.some((x) => x.id === p)) ? p : (resolveProvider(model, providers, openrouterConsent)?.id || '');
+      const avail = availableProviders(model, providers, openrouterOpenaiOk);
+      return (p && avail.some((x) => x.id === p)) ? p : (resolveProvider(model, providers, openrouterOpenaiOk)?.id || '');
     });
   }, [modelKey]); // eslint-disable-line react-hooks/exhaustive-deps
 

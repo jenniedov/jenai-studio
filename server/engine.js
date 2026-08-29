@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { getAdapter } from './adapters/index.js';
-import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster } from './storage/store.js';
+import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster, setOpenrouterOpenaiVerified } from './storage/store.js';
 import { makeError, codeFromMessage } from './errors/map.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -110,7 +110,7 @@ export async function processJob(jobId) {
   } catch (e) {
     return fail(job, ctx.makeError('UNKNOWN', { raw: String(e) }));
   }
-  if (result.error) return fail(job, result.error);
+  if (result.error) { noteOpenrouterEligibility(job, ctx.providerSlug, false, result.error); return fail(job, result.error); }
 
   // Async provider: poll until done.
   if (!result.done) {
@@ -163,6 +163,16 @@ export async function processJob(jobId) {
   fresh.outputs = outputs;
   fresh.status = 'done';
   putJob(fresh);
+  noteOpenrouterEligibility(job, ctx.providerSlug, true);
+}
+
+// Keep the "OpenAI-on-OpenRouter actually works" flag honest based on real
+// outcomes: a success confirms it; a data-policy rejection marks it unusable.
+// Only touches OpenAI-family OpenRouter slugs — nothing else is affected.
+function noteOpenrouterEligibility(job, slug, ok, err) {
+  if (job.provider !== 'openrouter' || !/^openai\//.test(slug || '')) return;
+  if (ok) setOpenrouterOpenaiVerified(true);
+  else if (err?.openrouterDataPolicy) setOpenrouterOpenaiVerified(false);
 }
 
 function mark(job, status) {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { api } from '../lib/api.js';
 import { useStudio } from '../lib/studio.jsx';
 import { useDialog } from './Dialog.jsx';
-import { askOpenrouterConsent } from '../lib/consent.js';
+import { enableOpenrouterOpenai } from '../lib/consent.js';
 
 const SIGNUP = {
   oxen: 'https://oxen.ai',
@@ -11,7 +11,7 @@ const SIGNUP = {
 };
 
 export default function Onboarding({ t, providers, onDone, onSkip }) {
-  const { openrouterConsent, setOpenrouterConsent } = useStudio();
+  const { openrouterOpenaiOk, verifyOpenrouter } = useStudio();
   const dialog = useDialog();
   const [provider, setProvider] = useState(providers[0]?.id || 'oxen');
   const [key, setKey] = useState('');
@@ -22,8 +22,8 @@ export default function Onboarding({ t, providers, onDone, onSkip }) {
     setSaving(true);
     try {
       await api.setKey(provider, key.trim());
-      if (provider === 'openrouter' && !openrouterConsent) {
-        await askOpenrouterConsent({ t, dialog, setOpenrouterConsent });
+      if (provider === 'openrouter' && !openrouterOpenaiOk) {
+        await enableOpenrouterOpenai({ t, dialog, verifyOpenrouter });
       }
       onDone();
     } finally {

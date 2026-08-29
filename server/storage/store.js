@@ -86,6 +86,17 @@ export function saveSettings(patch) {
   return cfg.settings;
 }
 
+// Whether OpenAI-on-OpenRouter is actually usable on this account. Set by the
+// explicit verify probe AND self-corrected by real generations, so the UI only
+// ever shows OpenRouter for GPT Image when it genuinely works.
+export function setOpenrouterOpenaiVerified(v) {
+  const cfg = getConfig();
+  if (cfg.settings?.openrouterOpenaiVerified === !!v) return cfg.settings; // no churn
+  cfg.settings = { ...cfg.settings, openrouterOpenaiVerified: !!v };
+  writeJson(CONFIG_PATH, cfg, true);
+  return cfg.settings;
+}
+
 // ---------------------------------------------------------------------------
 // Projects
 // ---------------------------------------------------------------------------

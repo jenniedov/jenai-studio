@@ -2,21 +2,26 @@ import React, { useState } from 'react';
 import { api } from '../lib/api.js';
 import { useStudio } from '../lib/studio.jsx';
 import { useDialog } from './Dialog.jsx';
-import { askOpenrouterConsent, OPENROUTER_PRIVACY_URL } from '../lib/consent.js';
+import { enableOpenrouterOpenai, OPENROUTER_PRIVACY_URL } from '../lib/consent.js';
 
 export default function SettingsModal({ onClose }) {
   const {
     t, providers, refreshProviders, locale, setLocale, theme, setTheme,
-    openrouterConsent, setOpenrouterConsent,
+    openrouterOpenaiOk, verifyOpenrouter, disableOpenrouterOpenai,
   } = useStudio();
   const dialog = useDialog();
-  const hasOpenrouter = providers.some((p) => p.id === 'openrouter');
+  const [checking, setChecking] = useState(false);
+  const openrouter = providers.find((p) => p.id === 'openrouter');
+  const hasOpenrouterKey = Boolean(openrouter?.hasKey);
 
   const onKeySaved = async (providerId) => {
-    if (providerId === 'openrouter' && !openrouterConsent) {
-      await askOpenrouterConsent({ t, dialog, setOpenrouterConsent });
+    if (providerId === 'openrouter' && !openrouterOpenaiOk) {
+      await enableOpenrouterOpenai({ t, dialog, verifyOpenrouter });
     }
   };
+
+  const turnOn = async () => { setChecking(true); try { await enableOpenrouterOpenai({ t, dialog, verifyOpenrouter }); } finally { setChecking(false); } };
+  const checkNow = async () => { setChecking(true); try { await verifyOpenrouter(); } finally { setChecking(false); } };
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -31,25 +36,26 @@ export default function SettingsModal({ onClose }) {
             {t('settings.privacy')}
           </p>
 
-          {hasOpenrouter && (
+          {hasOpenrouterKey && (
             <div className="settings-key-row" style={{ marginTop: 6 }}>
               <div>
                 <strong>{t('consent.settingsLabel')}</strong>{' '}
-                <span className={`badge ${openrouterConsent ? 'badge-ok' : 'badge-off'}`}>
-                  {openrouterConsent ? t('consent.on') : t('consent.off')}
+                <span className={`badge ${openrouterOpenaiOk ? 'badge-ok' : 'badge-off'}`}>
+                  {checking ? t('consent.checking') : (openrouterOpenaiOk ? t('consent.working') : t('consent.needsSetup'))}
                 </span>
                 <div style={{ color: 'var(--txt-faint)', fontSize: 12, marginTop: 4 }}>
                   <a className="link" href={OPENROUTER_PRIVACY_URL} target="_blank" rel="noreferrer">{t('consent.settingsHint')} ↗</a>
                 </div>
               </div>
-              <div className="seg" style={{ width: 'fit-content' }}>
-                <button className={openrouterConsent ? 'active' : ''}
-                  onClick={() => { if (!openrouterConsent) askOpenrouterConsent({ t, dialog, setOpenrouterConsent }); }}>
-                  {t('consent.on')}
-                </button>
-                <button className={!openrouterConsent ? 'active' : ''} onClick={() => setOpenrouterConsent(false)}>
-                  {t('consent.off')}
-                </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {openrouterOpenaiOk ? (
+                  <button className="btn btn-ghost" disabled={checking} onClick={disableOpenrouterOpenai}>{t('consent.turnOff')}</button>
+                ) : (
+                  <>
+                    <button className="btn btn-ghost" disabled={checking} onClick={checkNow}>{t('consent.check')}</button>
+                    <button className="btn btn-accent" disabled={checking} onClick={turnOn}>{t('consent.turnOn')}</button>
+                  </>
+                )}
               </div>
             </div>
           )}

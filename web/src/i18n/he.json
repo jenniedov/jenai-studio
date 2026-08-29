@@ -120,14 +120,22 @@
     "technical": "פרטים טכניים"
   },
   "consent": {
-    "title": "להשתמש גם במודלים של OpenAI דרך OpenRouter",
-    "body": "חלק מהמודלים ב-OpenRouter (GPT Image של OpenAI) עובדים רק אם מאשרים ל-OpenRouter לשתף את הפרומפטים עם הספק\nזאת הגדרה בחשבון OpenRouter שלך\nאם מאשרים נפתח לך העמוד להדליק את זה\nאם לא אין בעיה יש את המודלים של Google (Nano Banana) שעובדים בלי זה",
-    "yes": "כן פתחו לי את ההגדרה",
-    "no": "לא תודה",
+    "title": "להפעיל מודלים של OpenAI דרך OpenRouter",
+    "body": "חלק מהמודלים ב-OpenRouter (GPT Image של OpenAI) חסומים כברירת מחדל בגלל הגדרת פרטיות בחשבון OpenRouter שלך\nנכנסים ב-OpenRouter ל-Privacy ואז Zero Data Retention ומכבים את המתג של OpenAI\nזה מרשה ל-endpoints של OpenAI לרוץ (הם עלולים לשמור את הפרומפט)\nלוחצים פותחים לי את ההגדרה ואנחנו בודקים אם זה עובד\nלא בא לך יש את המודלים של Google (Nano Banana) שעובדים בלי כלום",
+    "yes": "פותחים לי את ההגדרה",
+    "no": "אחר כך",
     "settingsLabel": "מודלים של OpenAI דרך OpenRouter",
-    "settingsHint": "צריך גם להדליק את זה בהגדרות של OpenRouter",
-    "on": "דלוק",
-    "off": "כבוי"
+    "settingsHint": "לפתוח את הגדרת הפרטיות ב-OpenRouter",
+    "working": "עובד",
+    "needsSetup": "צריך הגדרה ב-OpenRouter",
+    "check": "בדיקה",
+    "turnOn": "להפעיל",
+    "turnOff": "לכבות",
+    "checking": "בודקים...",
+    "workingTitle": "מעולה זה עובד",
+    "workingBody": "מודלים של OpenAI דרך OpenRouter פעילים עכשיו",
+    "failHint": "עדיין כבוי\nב-OpenRouter נכנסים ל-Privacy ואז Zero Data Retention ומכבים את המתג של OpenAI\nאז חוזרים ולוחצים בדיקה",
+    "inconclusive": "לא הצלחנו לבדוק עכשיו\nמנסים שוב עוד רגע"
   },
   "common": { "close": "סגירה", "cancel": "ביטול", "image": "תמונה", "video": "סרטון", "confirm": "כן קדימה" },
   "confirmBatch": { "title": "מייצרים {count}", "body": "זה ייצר {count} בערך ב-${cost}" }
