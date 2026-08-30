@@ -301,6 +301,9 @@ a { color: inherit; }
 .dur-badge { position: absolute; top: 8px; inset-inline-end: 8px; background: rgba(23, 15, 19, .72); color: #fff; border-radius: var(--r-pill); padding: 2px 8px; font-size: 11px; z-index: 1; pointer-events: none; }
 .grid-loading { text-align: center; color: var(--txt-faint); padding: 18px; font-size: 13px; }
 .ctrl.ctrl-on { border-color: var(--pink); background: rgba(233, 61, 130, .09); color: var(--txt); }
+.ctrl-num { width: 84px; cursor: text; font-family: inherit; }
+.ctrl-text { width: 150px; cursor: text; font-family: inherit; }
+.ctrl-num::placeholder, .ctrl-text::placeholder { color: var(--txt-faint); font-weight: 500; }
 
 /* ---------- Projects view ---------- */
 .projects-view { padding: 30px clamp(20px, 4vw, 48px); overflow: auto; }

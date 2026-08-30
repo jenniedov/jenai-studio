@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { getAdapter } from './adapters/index.js';
 import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster, setOpenrouterOpenaiVerified, localFileToDataUrl } from './storage/store.js';
 import { makeError, codeFromMessage } from './errors/map.js';
+import { normalizeOptions, applyCustomOptions } from './options.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const MODELS = JSON.parse(readFileSync(join(here, '..', 'config', 'models.json'), 'utf8'));
@@ -44,6 +45,10 @@ export function createJobs(req) {
   const providerSlug = model.providers?.[providerId];
   if (!providerSlug) throw badRequest(`model "${req.model}" is not available on ${providerId}`);
 
+  // Normalize the generic options bag (and mirror built-ins onto req so the
+  // adapters' existing field reads keep working).
+  const options = normalizeOptions(req);
+
   const n = Math.max(1, Math.min(Number(req.num_outputs) || 1, BATCH_CAP));
 
   const jobs = [];
@@ -70,6 +75,7 @@ export function createJobs(req) {
         duration_seconds: req.duration_seconds ?? null,
         generate_audio: req.generate_audio ?? null,
         input_images: req.input_images || [],
+        options, // full generic bag (built-ins + custom) for retry + display
       },
       _req: req, // kept internally for processing; stripped from API responses
     };
@@ -103,6 +109,9 @@ export async function processJob(jobId) {
     model,
     makeError: (code, extra = {}) => makeError(code, { provider: providerLabel, model: model.label, ...extra }),
     sniff: codeFromMessage,
+    // Apply this model's custom options to a provider payload (config-driven,
+    // per-provider `map`). Built-ins are still handled by the adapter itself.
+    applyOptions: (payload) => applyCustomOptions(payload, model, job.provider, req.options || {}),
   };
 
   if (!key) return fail(job, ctx.makeError('AUTH_MISSING'));

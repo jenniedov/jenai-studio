@@ -51,6 +51,8 @@
     "model": "Model",
     "aspect": "Aspect",
     "resolution": "Resolution",
+    "duration": "Length",
+    "audio": "Audio",
     "provider": "Provider",
     "count": "Count",
     "noProvider": "No provider",

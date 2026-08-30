@@ -15,6 +15,7 @@ import {
 import { listAdapters } from './adapters/index.js';
 import { probeOpenaiEligibility } from './adapters/openrouter.js';
 import { refreshFeed, priceTable, feedMeta } from './feed/prices.js';
+import { optionSchema } from './options.js';
 import {
   createJobs, processJob, estimateCost, publicJob, BATCH_CAP,
 } from './engine.js';
@@ -25,7 +26,10 @@ const PORT = Number(process.env.PORT) || 4317;
 
 ensureDirs();
 
-const models = JSON.parse(readFileSync(join(ROOT, 'config', 'models.json'), 'utf8'));
+const modelsRaw = JSON.parse(readFileSync(join(ROOT, 'config', 'models.json'), 'utf8'));
+// Attach each model's computed option schema (built-ins + custom) so the front
+// end renders its controls from config, never from hardcoded assumptions.
+const models = { ...modelsRaw, models: modelsRaw.models.map((m) => ({ ...m, optionSchema: optionSchema(m) })) };
 const branding = JSON.parse(readFileSync(join(ROOT, 'config', 'branding.json'), 'utf8'));
 const legalHe = readFileSync(join(ROOT, 'config', 'legal.he.md'), 'utf8');
 

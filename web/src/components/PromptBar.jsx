@@ -5,59 +5,64 @@ import ModelPicker from './ModelPicker.jsx';
 import PillSelect from './PillSelect.jsx';
 import AspectIcon from './AspectIcon.jsx';
 
-// One floating prompt bar for both Image and Video studios (matches the
-// reference gen-studio, where both use the same bar + grid).
+// One floating prompt bar for both Image and Video studios. All the per-model
+// controls are DATA-DRIVEN from the model's optionSchema (built-ins + custom
+// options declared in config/models.json) — nothing about aspect / resolution /
+// duration / seed / etc. is hardcoded here. The front end just sends a generic
+// `options` bag; the server maps it per provider.
 export default function PromptBar({ type }) {
   const {
-    t, isRtl, imageModels, videoModels, providers, currentProject, openrouterOpenaiOk, prices,
+    t, isRtl, locale, imageModels, videoModels, providers, currentProject, openrouterOpenaiOk, prices,
     imageRefs, setImageRefs, recreate, setRecreate, videoRef, setVideoRef,
   } = useStudio();
   const isVideo = type === 'video';
   const models = isVideo ? videoModels : imageModels;
 
-  // Everything the user sets up persists across reloads (per studio type), so
-  // reopening the app restores the prompt, refs, model, ratio, quality, etc.
+  // Everything the user sets up persists across reloads (per studio type).
   const SAVE_KEY = `jenai.prompt.v1.${type}`;
   const saved = useMemo(() => {
     try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch { return {}; }
   }, [SAVE_KEY]);
 
-  // Prefer a sensible default ratio rather than whatever the list starts with.
-  const defaultAspect = (m) => {
-    const a = m?.aspectRatios || [];
-    if (!a.length) return '1:1';
-    const pref = isVideo ? ['16:9', '9:16', '1:1'] : ['1:1', '16:9', '4:3'];
-    return pref.find((r) => a.includes(r)) || a[0];
-  };
-
   const [modelKey, setModelKey] = useState(
     () => (saved.modelKey && models.some((m) => m.key === saved.modelKey) ? saved.modelKey : models[0]?.key || ''),
   );
   const model = models.find((m) => m.key === modelKey) || models[0];
+  const schema = model?.optionSchema || [];
   const provs = availableProviders(model, providers, openrouterOpenaiOk);
 
   const [provider, setProvider] = useState(() => saved.provider || resolveProvider(model, providers, openrouterOpenaiOk)?.id || '');
   const [prompt, setPrompt] = useState(() => saved.prompt || '');
-  const [aspect, setAspect] = useState(() => saved.aspect || defaultAspect(model));
-  const [resolution, setResolution] = useState(() => saved.resolution ?? (model?.resolutions?.[0] || ''));
   const [count, setCount] = useState(() => saved.count || 1);
-  const [duration, setDuration] = useState(() => saved.duration || model?.durations?.[0] || 4);
-  const [audio, setAudio] = useState(() => (saved.audio != null ? saved.audio : true));
   const [refs, setRefs] = useState(() => saved.refs || []);
+  const [optionValues, setOptionValues] = useState(() => {
+    const base = {};
+    for (const o of schema) base[o.key] = o.default;
+    return { ...base, ...(saved.options || {}) };
+  });
   const [busy, setBusy] = useState(false);
-  const [viewRef, setViewRef] = useState(null);   // reference being previewed full-size
+  const [viewRef, setViewRef] = useState(null);
   const fileRef = useRef(null);
   const promptRef = useRef(null);
   const batchCap = 20;
 
+  const setOpt = (k, v) => setOptionValues((o) => ({ ...o, [k]: v }));
+  const resolution = optionValues.resolution;
+  const duration = optionValues.duration ?? 4;
+
+  // Labels/placeholders: custom options carry a bilingual {en,he}; built-ins use i18n keys.
+  const lbl = (o) => (o?.label ? (o.label[locale] || o.label.en || o.key) : (o?.i18n ? t(o.i18n) : o?.key));
+  const ph = (o) => (o?.placeholder ? (o.placeholder[locale] || o.placeholder.en || '') : '');
+  const numericEnum = (o) => (o.values || []).every((v) => typeof v === 'number');
+
   // Persist the whole setup whenever any of it changes.
   useEffect(() => {
     const data = {
-      modelKey, provider, prompt, aspect, resolution, count, duration, audio,
+      modelKey, provider, prompt, count, options: optionValues,
       refs: refs.map((r) => ({ local_url: r.local_url, poster_url: r.poster_url })),
     };
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch { /* storage full/blocked */ }
-  }, [modelKey, provider, prompt, aspect, resolution, count, duration, audio, refs, SAVE_KEY]);
+  }, [modelKey, provider, prompt, count, optionValues, refs, SAVE_KEY]);
 
   // Auto-grow the prompt textarea up to ~4 lines, then it scrolls (CSS max-height).
   useEffect(() => {
@@ -76,17 +81,26 @@ export default function PromptBar({ type }) {
     if (r.model && models.some((m) => m.key === r.model)) setModelKey(r.model);
     // Apply the rest after the model-change effect has reconciled its defaults.
     setTimeout(() => {
-      if (r.aspect_ratio) setAspect(r.aspect_ratio);
-      if (r.resolution) setResolution(r.resolution);
+      const m = models.find((x) => x.key === (r.model || modelKey));
+      const s = m?.optionSchema || [];
+      // Prefer the stored generic bag; fall back to legacy top-level params.
+      const incoming = { ...(r.options || {}) };
+      if (incoming.aspect_ratio == null && r.aspect_ratio) incoming.aspect_ratio = r.aspect_ratio;
+      if (incoming.resolution == null && r.resolution) incoming.resolution = r.resolution;
+      if (incoming.duration == null && r.duration_seconds) incoming.duration = Number(r.duration_seconds);
+      if (incoming.generate_audio == null && r.generate_audio != null) incoming.generate_audio = r.generate_audio;
+      setOptionValues((prev) => {
+        const next = { ...prev };
+        for (const o of s) if (next[o.key] === undefined) next[o.key] = o.default;
+        for (const [k, v] of Object.entries(incoming)) if (v != null) next[k] = v;
+        return next;
+      });
       if (r.num_outputs) setCount(Math.max(1, Math.min(batchCap, Number(r.num_outputs))));
-      if (isVideo && r.duration_seconds) setDuration(Number(r.duration_seconds));
-      if (isVideo && r.generate_audio != null) setAudio(r.generate_audio);
       if (r.input_images?.length) {
         const refsIn = r.input_images.map((i) => ({ local_url: i.url })).filter((x) => x.local_url);
         setRefs(refsIn);
         if (!isVideo) setImageRefs(refsIn);
       }
-      const m = models.find((x) => x.key === (r.model || modelKey));
       const avail = availableProviders(m, providers, openrouterOpenaiOk);
       const pref = (r.preferProvider && avail.find((p) => p.id === r.preferProvider)) || resolveProvider(m, providers, openrouterOpenaiOk);
       if (pref) setProvider(pref.id);
@@ -102,14 +116,21 @@ export default function PromptBar({ type }) {
     if (!isVideo && imageRefs.length) setRefs(imageRefs);
   }, [videoRef, imageRefs]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // On model change, KEEP the current ratio / resolution / length / provider when
-  // the new model still supports them — only fall back to a default otherwise.
-  // This keeps the setup as consistent as possible while switching models.
+  // On model change, KEEP each option's current value when the new model still
+  // supports it (enum contains it), else fall back to its default — so ratio,
+  // quality, length, etc. stay as consistent as possible. Provider stays too.
   useEffect(() => {
     if (!model) return;
-    setAspect((a) => (model.aspectRatios?.includes(a) ? a : defaultAspect(model)));
-    setResolution((r) => (model.resolutions?.includes(r) ? r : (model.resolutions?.[0] || '')));
-    setDuration((d) => (model.durations?.includes(d) ? d : (model.durations?.[0] || 4)));
+    const s = model.optionSchema || [];
+    setOptionValues((prev) => {
+      const next = { ...prev };
+      for (const o of s) {
+        const cur = prev[o.key];
+        if (o.type === 'enum') next[o.key] = (o.values || []).includes(cur) ? cur : o.default;
+        else if (cur === undefined) next[o.key] = o.default;
+      }
+      return next;
+    });
     setProvider((p) => {
       const avail = availableProviders(model, providers, openrouterOpenaiOk);
       return (p && avail.some((x) => x.id === p)) ? p : (resolveProvider(model, providers, openrouterOpenaiOk)?.id || '');
@@ -118,23 +139,19 @@ export default function PromptBar({ type }) {
 
   const money = (n) => (n < 0.1 ? `$${n.toFixed(3)}` : `$${n.toFixed(2)}`);
 
-  // Real per-unit price for a provider from the jenai.house feed (falls back to
-  // the rough config price). Video is priced per second, images per image.
   const unitPriceFor = (providerId) => {
     const feed = priceFor(prices, modelKey, providerId, resolution);
-    if (feed) return { price: feed.price, unit: feed.unit, deal: feed.isTemporary || Boolean(feed.activeDeal) };
+    if (feed) return { price: feed.price, unit: feed.unit };
     const u = unitCost(model);
-    return u == null ? null : { price: u, unit: isVideo ? 'second' : 'image', deal: false };
+    return u == null ? null : { price: u, unit: isVideo ? 'second' : 'image' };
   };
-
-  // Short per-unit label for a provider pill/option, e.g. "$0.25/s" or "$0.03/img".
   const unitLabel = (providerId) => {
     const p = unitPriceFor(providerId);
     if (!p) return '';
     return `${money(p.price)}${p.unit === 'second' ? '/s' : '/img'}`;
   };
 
-  // Total for the current setup: per second × length (video) or per image × count.
+  // Total: per second × length (video) or per image × count.
   const cost = useMemo(() => {
     const p = unitPriceFor(provider);
     if (!p) return null;
@@ -150,19 +167,15 @@ export default function PromptBar({ type }) {
     if (!isVideo) setImageRefs((r) => (r.length >= MAX_REFS || r.some((x) => x.local_url === ref.local_url) ? r : [...r, ref]));
   };
 
-  // Upload a File/Blob (from picker, drop, or paste) and add it as a reference.
   const addFile = async (file) => {
     if (!file || refs.length >= MAX_REFS) return;
     if (!/^image\/|^video\//.test(file.type)) return;
     const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
     try { const up = await api.upload(dataUrl); pushRef(up); } catch { /* ignore */ }
   };
-
   const addFiles = async (fileList) => {
     for (const f of Array.from(fileList || [])) { if (refs.length >= MAX_REFS) break; await addFile(f); }
   };
-
-  // Drop handler: accepts a dragged gallery item (already on the server) or OS files.
   const onDrop = async (e) => {
     e.preventDefault();
     const payload = e.dataTransfer.getData('application/x-jenai-media');
@@ -171,13 +184,22 @@ export default function PromptBar({ type }) {
     }
     if (e.dataTransfer.files?.length) await addFiles(e.dataTransfer.files);
   };
-
-  // Paste handler: pull image/video files out of the clipboard.
   const onPaste = async (e) => {
     const items = e.clipboardData?.items || [];
     const files = [];
     for (const it of items) { if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); } }
     if (files.length) { e.preventDefault(); await addFiles(files); }
+  };
+
+  // Collect the generic options bag from the current schema (omit blanks).
+  const buildOptions = () => {
+    const out = {};
+    for (const o of schema) {
+      const v = optionValues[o.key];
+      if (v === undefined || v === null || v === '') continue;
+      out[o.key] = v;
+    }
+    return out;
   };
 
   const fire = async () => {
@@ -189,21 +211,66 @@ export default function PromptBar({ type }) {
         provider,
         model: modelKey,
         prompt: prompt.trim(),
-        aspect_ratio: aspect,
-        resolution: resolution || undefined,
         num_outputs: isVideo ? 1 : Number(count),
-        duration_seconds: isVideo ? Number(duration) : undefined,
-        generate_audio: isVideo ? audio : undefined,
         input_images: refs.map((r) => ({ role: 'reference', url: absolute(r.local_url) })),
         project_id: currentProject === 'all' ? 'default' : currentProject,
+        options: buildOptions(),
       });
-      // Keep the whole setup in place so it's easy to tweak and regenerate.
       window.dispatchEvent(new Event('jenai:generated'));
     } finally { setBusy(false); }
   };
 
   const noProvider = provs.length === 0;
   const canGo = !busy && !noProvider && prompt.trim().length > 0;
+
+  // Render one control from a schema entry.
+  const renderOption = (o) => {
+    const v = optionValues[o.key];
+    if (o.ui === 'aspect') {
+      return (
+        <PillSelect key={o.key} renderIcon={(r) => <AspectIcon ratio={r} />} value={v}
+          options={(o.values || []).map((a) => ({ value: a, label: a }))}
+          onChange={(nv) => setOpt(o.key, nv)} />
+      );
+    }
+    if (o.ui === 'pill') {
+      return (
+        <PillSelect key={o.key} icon={o.icon} value={v}
+          options={(o.values || []).map((x) => ({ value: x, label: o.suffix ? `${x}${o.suffix}` : String(x) }))}
+          onChange={(nv) => setOpt(o.key, numericEnum(o) ? Number(nv) : nv)} />
+      );
+    }
+    if (o.ui === 'toggle') {
+      const on = v !== false;
+      if (o.key === 'generate_audio') {
+        return (
+          <button key={o.key} className={`ctrl ${on ? 'ctrl-on' : ''}`} onClick={() => setOpt(o.key, !on)}>
+            🔊 {on ? t('videos.audioOn') : t('videos.audioOff')}
+          </button>
+        );
+      }
+      return (
+        <button key={o.key} className={`ctrl ${on ? 'ctrl-on' : ''}`} onClick={() => setOpt(o.key, !on)}>
+          {lbl(o)} {on ? '✓' : '✗'}
+        </button>
+      );
+    }
+    if (o.ui === 'number') {
+      return (
+        <input key={o.key} className="ctrl ctrl-num" type="number" step={o.step || 1}
+          title={lbl(o)} placeholder={ph(o) || lbl(o)} value={v ?? ''}
+          onChange={(e) => { const raw = e.target.value; setOpt(o.key, raw === '' ? undefined : (o.type === 'int' ? parseInt(raw, 10) : Number(raw))); }} />
+      );
+    }
+    if (o.ui === 'text') {
+      return (
+        <input key={o.key} className="ctrl ctrl-text" type="text" dir="auto"
+          title={lbl(o)} placeholder={ph(o) || lbl(o)} value={v ?? ''}
+          onChange={(e) => setOpt(o.key, e.target.value)} />
+      );
+    }
+    return null;
+  };
 
   return (
     <>
@@ -240,23 +307,7 @@ export default function PromptBar({ type }) {
               })}
               onChange={setProvider} />
           )}
-          {model?.aspectRatios?.length > 0 && (
-            <PillSelect renderIcon={(r) => <AspectIcon ratio={r} />} value={aspect}
-              options={model.aspectRatios.map((a) => ({ value: a, label: a }))} onChange={setAspect} />
-          )}
-          {model?.resolutions?.length > 0 && (
-            <PillSelect icon="◈" value={resolution}
-              options={model.resolutions.map((r) => ({ value: r, label: r }))} onChange={setResolution} />
-          )}
-          {isVideo && model?.durations?.length > 0 && (
-            <PillSelect icon="◷" value={duration}
-              options={model.durations.map((d) => ({ value: d, label: `${d}s` }))} onChange={(v) => setDuration(Number(v))} />
-          )}
-          {isVideo && model?.audio && (
-            <button className={`ctrl ${audio ? 'ctrl-on' : ''}`} onClick={() => setAudio((a) => !a)}>
-              🔊 {audio ? t('videos.audioOn') : t('videos.audioOff')}
-            </button>
-          )}
+          {schema.map(renderOption)}
           {!isVideo && (
             <div className="stepper">
               <button onClick={() => setCount((c) => Math.max(1, c - 1))}>−</button>
@@ -271,7 +322,6 @@ export default function PromptBar({ type }) {
       </div>
 
       {viewRef && (
-        // Full-size preview of a reference; click anywhere outside the media to close.
         <div className="ref-viewer" onClick={() => setViewRef(null)}>
           <div className="ref-viewer-inner" onClick={(e) => e.stopPropagation()}>
             {viewRef.poster_url

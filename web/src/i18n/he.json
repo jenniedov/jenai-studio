@@ -51,6 +51,8 @@
     "model": "מודל",
     "aspect": "יחס",
     "resolution": "רזולוציה",
+    "duration": "אורך",
+    "audio": "קול",
     "provider": "ספק",
     "count": "כמה",
     "noProvider": "אין ספק",

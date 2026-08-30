@@ -41,6 +41,7 @@ export const oxen = {
       if (model.audio) payload.generate_audio = req.generate_audio !== false;
     }
     if (urls.length) payload.input_image = urls;
+    ctx.applyOptions?.(payload); // config-driven custom options (seed, negative_prompt, …)
     Object.assign(payload, req.provider_options || {});
 
     let res;

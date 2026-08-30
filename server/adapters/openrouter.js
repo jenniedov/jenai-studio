@@ -25,6 +25,7 @@ export const openrouter = {
     if (req.aspect_ratio) payload.aspect_ratio = req.aspect_ratio;
     if (req.resolution) payload.resolution = req.resolution;
     if (urls.length) payload.image = urls.length === 1 ? urls[0] : urls;
+    ctx.applyOptions?.(payload); // config-driven custom options mapped to openrouter
     // OpenAI image models route only when the account allows data sharing.
     if (/^openai\//.test(ctx.providerSlug)) payload.provider = { data_collection: 'allow' };
 

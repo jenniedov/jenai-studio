@@ -71,12 +71,14 @@ export const kie = {
   async submit(req, ctx) {
     if (familyOf(ctx.providerSlug) === 'veo') return submitVeo(req, ctx);
 
+    const input = buildJobsInput(req, ctx.providerSlug);
+    ctx.applyOptions?.(input); // config-driven custom options mapped to kie
     let res;
     try {
       res = await fetch(`${BASE}/jobs/createTask`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${ctx.key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: ctx.providerSlug, input: buildJobsInput(req, ctx.providerSlug) }),
+        body: JSON.stringify({ model: ctx.providerSlug, input }),
       });
     } catch (e) {
       return { error: ctx.makeError('PROVIDER_DOWN', { raw: String(e) }) };
