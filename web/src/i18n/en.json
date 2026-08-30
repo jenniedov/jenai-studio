@@ -85,6 +85,7 @@
     "author": "Author",
     "info": "Info", "edit": "Edit", "comments": "Comments",
     "prompt": "PROMPT", "copy": "Copy", "copied": "Copied",
+    "references": "References",
     "details": "DETAILS",
     "model": "Model", "provider": "Provider", "type": "Type", "created": "Created",
     "turnToVideo": "Turn to video",

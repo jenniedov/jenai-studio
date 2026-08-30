@@ -85,6 +85,7 @@
     "author": "יוצר",
     "info": "מידע", "edit": "עריכה", "comments": "תגובות",
     "prompt": "פרומפט", "copy": "העתקה", "copied": "הועתק",
+    "references": "רפרנסים",
     "details": "פרטים",
     "model": "מודל", "provider": "ספק", "type": "סוג", "created": "נוצר",
     "turnToVideo": "להפוך לסרטון",

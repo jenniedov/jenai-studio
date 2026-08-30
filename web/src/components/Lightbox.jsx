@@ -9,7 +9,17 @@ export default function Lightbox({ job, onClose }) {
   const [tab, setTab] = useState('info');
   const [copied, setCopied] = useState(false);
   const [imgCopied, setImgCopied] = useState(false);
+  const [refView, setRefView] = useState(null); // a reference previewed full-size
   const out = job.outputs?.[0];
+
+  // The image/video references this generation was made from (stored per job).
+  const rel = (u) => String(u || '').replace(/^https?:\/\/[^/]+/, '');
+  const isVideoUrl = (u) => /\.(mp4|webm|mov)(\?|$)/i.test(u || '');
+  const refs = (job.params?.input_images || [])
+    .map((r) => (typeof r === 'string' ? r : r?.url))
+    .filter(Boolean)
+    .filter((u) => !/^data:/i.test(u)) // skip inlined base64 copies
+    .map(rel);
 
   const copyImage = async () => {
     if (!out?.local_url) return;
@@ -87,6 +97,20 @@ export default function Lightbox({ job, onClose }) {
             <button className="copybtn" onClick={copyPrompt}>⧉ {copied ? t('lightbox.copied') : t('lightbox.copy')}</button>
           </div>
           <div className="prompt-text">{job.prompt || '—'}</div>
+          {refs.length > 0 && (
+            <>
+              <div className="block-label">{t('lightbox.references')} ({refs.length})</div>
+              <div className="lb-refs">
+                {refs.map((u) => (
+                  <button className="lb-ref" key={u} onClick={() => setRefView(u)} title={t('lightbox.reference')}>
+                    {isVideoUrl(u)
+                      ? <><video src={u} muted playsInline preload="metadata" /><span className="lb-ref-play">▶</span></>
+                      : <img src={u} alt="" loading="lazy" />}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <div className="block-label">{t('lightbox.details')}</div>
           <div className="details">
             <dl>
@@ -117,6 +141,15 @@ export default function Lightbox({ job, onClose }) {
           </div>
         </div>
       </aside>
+      {refView && (
+        <div className="ref-viewer" onClick={() => setRefView(null)}>
+          <div className="ref-viewer-inner" onClick={(e) => e.stopPropagation()}>
+            {isVideoUrl(refView)
+              ? <video src={refView} controls autoPlay loop playsInline />
+              : <img src={refView} alt="" />}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
