@@ -1,13 +1,13 @@
-// OpenRouter adapter. OpenRouter generates images through its chat-completions
-// API (image-output models like Gemini Flash Image / GPT Image), returning the
-// image as a base64 data URL in the message. Sync — no polling.
+// OpenRouter adapter. Uses the dedicated Images API, which (unlike chat
+// completions) honours aspect_ratio and resolution — chat completions ignores
+// them and always returns 1:1. Sync — no polling.
 //
-//   POST https://openrouter.ai/api/v1/chat/completions
-//     { model, messages:[{role:'user',content:prompt}], modalities:['image','text'] }
-//   -> choices[0].message.images[].image_url.url  (data:image/...;base64,...)
+//   POST https://openrouter.ai/api/v1/images
+//     { model, prompt, aspect_ratio, resolution, image?: dataUrl | [dataUrl] }
+//   -> { data: [ { b64_json, media_type } ] }
 //
-// Auth: Authorization: Bearer <key>. Best machine-readable errors of any
-// provider via error.metadata.error_type. Video is not offered here.
+// References are passed as base64 data URLs in `image` (the engine inlines local
+// files first). Auth: Authorization: Bearer <key>. Video is not offered here.
 
 const BASE = 'https://openrouter.ai/api/v1';
 
@@ -20,13 +20,17 @@ export const openrouter = {
     if (req.task !== 'image') {
       return { error: ctx.makeError('BAD_REQUEST', { raw: { message: 'OpenRouter supports image generation only.' } }) };
     }
-    const content = [{ type: 'text', text: req.prompt }];
-    for (const im of req.input_images || []) {
-      if (im.url) content.push({ type: 'image_url', image_url: { url: im.url } });
-    }
+    const urls = (req.input_images || []).map((i) => i.url).filter(Boolean);
+    const payload = { model: ctx.providerSlug, prompt: req.prompt };
+    if (req.aspect_ratio) payload.aspect_ratio = req.aspect_ratio;
+    if (req.resolution) payload.resolution = req.resolution;
+    if (urls.length) payload.image = urls.length === 1 ? urls[0] : urls;
+    // OpenAI image models route only when the account allows data sharing.
+    if (/^openai\//.test(ctx.providerSlug)) payload.provider = { data_collection: 'allow' };
+
     let res;
     try {
-      res = await fetch(`${BASE}/chat/completions`, {
+      res = await fetch(`${BASE}/images`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${ctx.key}`,
@@ -34,15 +38,7 @@ export const openrouter = {
           'HTTP-Referer': 'http://localhost',
           'X-Title': 'JenAI Studio',
         },
-        body: JSON.stringify({
-          model: ctx.providerSlug,
-          messages: [{ role: 'user', content }],
-          modalities: ['image', 'text'],
-          // OpenAI image models route only when the account allows data sharing.
-          // The user opts in via the in-app consent (and enables it on their
-          // OpenRouter account); passing this makes routing explicit.
-          ...(/^openai\//.test(ctx.providerSlug) ? { provider: { data_collection: 'allow' } } : {}),
-        }),
+        body: JSON.stringify(payload),
       });
     } catch (e) {
       return { error: ctx.makeError('PROVIDER_DOWN', { raw: String(e) }) };
@@ -72,9 +68,9 @@ export const openrouter = {
       return { error: ctx.makeError(code, { status, raw: body }) };
     }
 
-    const msg = body?.choices?.[0]?.message || {};
-    const url = msg.images?.[0]?.image_url?.url
-      || (typeof msg.content === 'string' ? msg.content.match(/data:image[^)"'\s]+/)?.[0] : null);
+    const item = body?.data?.[0] || {};
+    const url = item.url
+      || (item.b64_json ? `data:${item.media_type || 'image/png'};base64,${item.b64_json}` : null);
     if (!url) return { error: ctx.makeError('UNKNOWN', { status: res.status, raw: body }) };
     return { done: true, outputs: [{ type: 'image', url }] };
   },
