@@ -272,9 +272,22 @@ export default function PromptBar({ type }) {
     return null;
   };
 
+  // Publish the prompt bar's live height so the gallery can pad its bottom by
+  // exactly that much — otherwise a tall bar (lots of text/refs) hides the last row.
+  const barRef = useRef(null);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const set = () => document.documentElement.style.setProperty('--promptbar-h', `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => { ro.disconnect(); };
+  }, []);
+
   return (
     <>
-      <div className="promptbar" onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
+      <div className="promptbar" ref={barRef} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
         <div className="refrow">
           {refs.map((r, i) => (
             <div className="refthumb" key={r.local_url} onClick={() => setViewRef(r)} title="">

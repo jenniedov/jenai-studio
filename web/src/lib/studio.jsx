@@ -7,6 +7,8 @@ export const useStudio = () => useContext(Ctx);
 
 const LOCALE_KEY = 'jenai.locale';
 const THEME_KEY = 'jenai.theme';
+const VIEW_KEY = 'jenai.view';
+const PROJECT_KEY = 'jenai.project';
 
 // Does this model route to OpenAI on OpenRouter? Those endpoints only work when
 // the account's OpenRouter data policy allows them (a per-account setting we
@@ -99,8 +101,9 @@ export function StudioProvider({ initial, children }) {
     () => localStorage.getItem(LOCALE_KEY) || initial.config.branding.defaultLocale || 'he',
   );
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'light');
-  const [view, setView] = useState('images');
-  const [currentProject, setCurrentProject] = useState('all');
+  // Restore the tab + project the person was on, so a refresh stays put.
+  const [view, setView] = useState(() => localStorage.getItem(VIEW_KEY) || 'images');
+  const [currentProject, setCurrentProject] = useState(() => localStorage.getItem(PROJECT_KEY) || 'all');
 
   // Cross-view carriers.
   const [imageRefs, setImageRefs] = useState([]);        // [{local_url}]
@@ -120,6 +123,10 @@ export function StudioProvider({ initial, children }) {
     else document.documentElement.removeAttribute('data-theme');
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  // Persist tab + project so a page refresh returns to where you were.
+  useEffect(() => { localStorage.setItem(VIEW_KEY, view); }, [view]);
+  useEffect(() => { localStorage.setItem(PROJECT_KEY, currentProject); }, [currentProject]);
 
   const refreshProviders = useCallback(async () => {
     setProviders((await api.providers()).providers);
