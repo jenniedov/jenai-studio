@@ -24,6 +24,20 @@ const HEADERS = (key) => ({
   'X-Title': 'JenAI Studio',
 });
 
+// Some models (e.g. GPT Image 1.5) express "resolution" as OpenAI size keywords
+// (auto/square/portrait/landscape) meant for the OpenAI `size` field. OpenRouter's
+// Images API doesn't understand those — it wants aspect_ratio + a real resolution
+// (1K/2K/…). Translate the keyword to an aspect ratio and drop the bogus
+// resolution so the request is valid.
+const SIZE_TO_RATIO = { square: '1:1', portrait: '2:3', landscape: '3:2' };
+function normSize(req) {
+  let aspect = req.aspect_ratio;
+  let resolution = req.resolution;
+  if (resolution && SIZE_TO_RATIO[resolution]) { aspect = aspect || SIZE_TO_RATIO[resolution]; resolution = undefined; }
+  else if (resolution === 'auto') resolution = undefined;
+  return { aspect, resolution };
+}
+
 export const openrouter = {
   id: 'openrouter',
   label: 'OpenRouter',
@@ -39,9 +53,10 @@ export const openrouter = {
     // the reference). Text→image stays on the Images endpoint for aspect fidelity.
     if (urls.length) return submitWithReference(req, ctx, urls);
 
+    const { aspect, resolution } = normSize(req);
     const payload = { model: ctx.providerSlug, prompt: req.prompt };
-    if (req.aspect_ratio) payload.aspect_ratio = req.aspect_ratio;
-    if (req.resolution) payload.resolution = req.resolution;
+    if (aspect) payload.aspect_ratio = aspect;
+    if (resolution) payload.resolution = resolution;
     ctx.applyOptions?.(payload); // config-driven custom options mapped to openrouter
     // OpenAI image models route only when the account allows data sharing.
     if (/^openai\//.test(ctx.providerSlug)) payload.provider = { data_collection: 'allow' };
@@ -72,7 +87,8 @@ export const openrouter = {
 // as image_url content parts, which is the path Gemini/Nano-Banana actually
 // conditions on. aspect_ratio isn't a first-class field here, so nudge it in text.
 async function submitWithReference(req, ctx, urls) {
-  const parts = [{ type: 'text', text: req.prompt + (req.aspect_ratio ? `\n\nOutput aspect ratio: ${req.aspect_ratio}.` : '') }];
+  const { aspect } = normSize(req);
+  const parts = [{ type: 'text', text: req.prompt + (aspect ? `\n\nOutput aspect ratio: ${aspect}.` : '') }];
   for (const u of urls) parts.push({ type: 'image_url', image_url: { url: u } });
   const payload = {
     model: ctx.providerSlug,

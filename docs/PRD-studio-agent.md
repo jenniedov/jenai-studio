@@ -74,12 +74,19 @@ Tools (initial set):
 - `list_models(type?)` → models + their `optionSchema` (so the agent knows exactly what each model accepts).
 - `get_model_options(model)` → the option schema for one model.
 - `estimate_cost(model, provider, options, count)` → uses the jenai.house feed.
-- `create_project(name)` / `list_projects()` → project management.
-- `bind_session(project_id, session_label)` → associate the current agent session with a project (see §5.4).
-- `generate_image(project_id, model, provider?, prompt, options?, input_images?, count?)`
-- `generate_video(project_id, model, provider?, prompt, options?, input_images?)`
-- `edit_image(project_id, image_ref, prompt, options?)` — reference-to-image edit.
-- `get_job(job_id)` / `list_assets(project_id)` → status + results.
+- `create_project(name)` / `list_projects()` / `rename_project(from, to)` → project management.
+- `get_project_brief(project)` / `set_project_brief(project, brief)` → the project's
+  durable notes (brand, style, characters) — the studio's portable per-project memory.
+- `generate_image(project, model, provider?, prompt, options?, input_images?, count?)`
+- `generate_video(project, model, provider?, prompt, options?, input_images?)`
+- `edit_image(project, image, prompt, options?)` — reference-to-image edit.
+- **Async by default:** `generate_*` submit and return quickly; if not finished within
+  a short budget they hand back job ids (video always does — up to ~15 min). The agent
+  polls `check_jobs(job_ids)` (immediate, no wait) until done — never resubmits. The
+  studio keeps processing in the background regardless.
+- `get_job(job_id)` / `check_jobs(job_ids)` / `list_assets(project)` → status + results.
+- `list_project_assets(project)` / `save_asset(project, job_id|url, name?, tags?)` /
+  `tag_asset(asset_id, tags?, name?)` → the reusable, tagged reference library (§assets).
 - `list_skills()` / `get_skill(name)` → what the agent can do + how (§5.2, §10).
 
 **Returning results so the agent can show them:** each `generate_*` result returns
