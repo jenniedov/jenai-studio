@@ -4,6 +4,7 @@ import { StudioProvider, useStudio } from './lib/studio.jsx';
 import TopNav from './components/TopNav.jsx';
 import StudioView from './components/StudioView.jsx';
 import ProjectsView from './components/ProjectsView.jsx';
+import ProjectView from './components/ProjectView.jsx';
 import CinemaView from './components/CinemaView.jsx';
 import StudioPlaceholder from './components/StudioPlaceholder.jsx';
 import Onboarding from './components/Onboarding.jsx';
@@ -54,6 +55,7 @@ function Shell() {
     <div className="app-root">
       <TopNav onOpenSettings={() => setSettingsOpen(true)} />
       {view === 'projects' && <ProjectsView />}
+      {view === 'project' && <ProjectView />}
       {view === 'images' && <StudioView type="image" />}
       {view === 'videos' && <StudioView type="video" />}
       {view === 'cinema' && <CinemaView />}

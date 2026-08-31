@@ -99,7 +99,7 @@ export default function MediaGrid({ type, onOpen, onError }) {
 
   return (
     <>
-      <div className={`media-grid ${type}`}>
+      <div className={`media-grid ${type || 'all'}`}>
         {jobs.map((job) => (
           <MediaCard key={job.job_id} job={job} t={t} onOpen={onOpen} onError={onError} onDelete={remove} onRetry={retryJob} />
         ))}

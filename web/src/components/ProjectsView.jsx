@@ -44,7 +44,7 @@ export default function ProjectsView() {
     setProjects(next); setStudioProjects(next); loadCounts(next);
   };
 
-  const openProject = (p) => { setCurrentProject(p); setView('images'); };
+  const openProject = (p) => { setCurrentProject(p); setView('project'); };
 
   const archiveProject = async (name, isArchived) => {
     const r = await api.archiveProject(name, !isArchived);

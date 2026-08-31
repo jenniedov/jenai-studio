@@ -296,6 +296,8 @@ a { color: inherit; }
 .media-grid { display: grid; gap: 12px; }
 .media-grid.image { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 .media-grid.video { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+.media-grid.all { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.media-grid.all .gcard.wide { grid-column: span 2; }
 .gcard.wide { aspect-ratio: 16 / 9; }
 .thumb.video-fallback { display: grid; place-items: center; font-size: 28px; color: var(--txt-faint); }
 .dur-badge { position: absolute; top: 8px; inset-inline-end: 8px; background: rgba(23, 15, 19, .72); color: #fff; border-radius: var(--r-pill); padding: 2px 8px; font-size: 11px; z-index: 1; pointer-events: none; }
