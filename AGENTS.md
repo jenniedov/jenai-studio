@@ -18,12 +18,23 @@ Studio browser tab, grouped into a project.
 ## Skills = your playbooks
 The `skill/` folder holds task playbooks (also readable via the MCP `list_skills` /
 `get_skill` tools). Read the relevant one before acting:
-- **studio** — the core operating manual (start here for any generation).
+- **creative-director** — start here when the request is open-ended or the person is
+  unsure ("help me figure out a video"). Reads intent, interviews only when it helps,
+  proposes a concept, produces it in gated stages, reviews the result.
+- **asking-the-user** — the recipe for asking good structured questions during
+  discovery (single-select, one at a time, always an easy way out).
+- **studio** — the core generate loop (start here for any **concrete** brief).
+- **choosing-an-image-model / choosing-a-video-model** — pick the model.
 - **edit-image** — restyle/modify an existing image.
 - **make-a-set** — a coherent set/series/storyboard.
 - **image-to-video** — animate a still.
+- **seedance-2-5-guide / seedance-2-0-guide** — write strong video prompts.
 - **add-provider / add-image-model** — extend the catalog (for maintainers).
 User-authored skills live in `~/.jenai-studio/skills/` and appear the same way.
+
+**Intent first:** a concrete request ("three images of a cat") gets generated
+immediately — no interview. Only a vague or "help me" request triggers
+`creative-director` discovery. Don't turn a clear brief into a questionnaire.
 
 ## The core loop
 1. `create_project({name})` named for what they're building; use it as `project` all session.

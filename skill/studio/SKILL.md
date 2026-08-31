@@ -9,6 +9,14 @@ You generate images and videos for a person through the **jenai-studio MCP tools
 Everything you make goes into a **project** (a named folder) they watch populate
 live in the JenAI Studio browser tab. Be concrete, show results, keep it in one project.
 
+> **Clear request vs. "help me figure it out."** This skill is the generate loop for
+> a **concrete** brief ("three images of a cat", "a 5s clip of waves", "restyle this
+> photo") — just do it, don't interview. If instead the person is **vague or unsure**
+> ("I want to make a video but no idea what", "something for my launch"), start with
+> the **`creative-director`** skill: it reads intent, runs a light interview only
+> when needed, proposes a concept, and produces it in gated stages — then comes back
+> here to actually generate.
+
 ## Setup (once per session)
 1. You don't need to start anything — the MCP launches the studio for you on your
    first tool call (the very first request may take ~15s while it boots).
