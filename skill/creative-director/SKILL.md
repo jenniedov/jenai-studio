@@ -148,10 +148,22 @@ Don't auto-regenerate. **Gate 5:** tell them what you found and let them choose 
 - Not a video editor. The studio generates assets; it does not stitch clips into a
   single edited file. Deliver the clips (and the shot order), and say so plainly.
 
+## Project memory (the brief)
+
+Each project has a **brief** — the person's durable notes (brand, colors, aspect
+ratio, tone, characters to keep). At the start of any work in a project, call
+`get_project_brief({project})` and follow it. When the person tells you something
+worth keeping for next time, save it with `set_project_brief` (it replaces the
+whole brief — read first, then append). This is how the studio remembers your
+preferences across sessions and across agents, so you don't re-ask every time.
+
 ## Where the other skills fit
 
 - **asking-the-user** — how to ask the structured questions in Steps 1–3.
 - **studio** — the actual generate loop (models, options, cost, projects).
 - **choosing-an-image-model / choosing-a-video-model** — pick the model.
+- **character-sheet** — a three-panel character reference in the studio's house
+  style (headless-left, flat gray, shadowless). Use this for any character sheet /
+  turnaround / model sheet, and save the result as a `role:` asset.
 - **seedance-2-5-guide / seedance-2-0-guide / image-to-video / make-a-set /
   edit-image** — craft the prompt for the chosen job.

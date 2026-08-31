@@ -274,6 +274,18 @@ server.registerTool('rename_project', {
   inputSchema: { from: z.string(), to: z.string() },
 }, async ({ from, to }) => { const r = await post('/projects/rename', { from, to }); return text({ renamed: { from, to }, projects: r.projects }); });
 
+server.registerTool('get_project_brief', {
+  title: 'Get project brief',
+  description: 'Read a project\'s brief — a free-text note about what it is, the brand, the style, and how the person likes things. READ THIS when you start working in a project, and follow it. Empty means none set yet.',
+  inputSchema: { project: z.string() },
+}, async ({ project }) => { const r = await api(`/projects/brief?project=${encodeURIComponent(project)}`); return text({ project, brief: r.brief }); });
+
+server.registerTool('set_project_brief', {
+  title: 'Set project brief',
+  description: 'Set/replace a project\'s brief (free text — this REPLACES the whole brief). Use it to remember durable, project-specific things the person tells you (brand colors, aspect ratio, tone, "always keep this character"). Read the current brief first if you only mean to add to it.',
+  inputSchema: { project: z.string(), brief: z.string() },
+}, async ({ project, brief }) => { const r = await post('/projects/brief', { project, brief }); return text({ project, brief: r.brief }); });
+
 const genSchema = {
   project: z.string().describe('project name to save into (create_project first)'),
   model: z.string(), provider: z.string().optional().describe('kie | oxen | openrouter; omit to auto-pick'),

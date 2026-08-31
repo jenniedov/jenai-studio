@@ -125,6 +125,22 @@ export function getProjects() {
   return getConfig().projects || ['default'];
 }
 
+// Per-project brief: a free-text note about this project (what it is, brand
+// colors, style, how the person likes it) that any agent reads on entry and can
+// update. The studio's own portable per-project memory, visible in the UI.
+export function getProjectBrief(name) {
+  return (getConfig().projectBriefs || {})[name] || '';
+}
+
+export function setProjectBrief(name, brief) {
+  const cfg = getConfig();
+  cfg.projectBriefs = cfg.projectBriefs || {};
+  const clean = String(brief == null ? '' : brief);
+  if (clean) cfg.projectBriefs[name] = clean; else delete cfg.projectBriefs[name];
+  writeJson(CONFIG_PATH, cfg, true);
+  return cfg.projectBriefs[name] || '';
+}
+
 export function getArchivedProjects() {
   return getConfig().archivedProjects || [];
 }
@@ -174,6 +190,10 @@ export function renameProject(from, to) {
   if (cfg.projects.includes(clean) || (cfg.archivedProjects || []).includes(clean)) throw new Error(`a project named "${clean}" already exists`);
   cfg.projects = cfg.projects.map((n) => (n === from ? clean : n));
   cfg.archivedProjects = (cfg.archivedProjects || []).map((n) => (n === from ? clean : n));
+  if (cfg.projectBriefs?.[from] != null) {
+    cfg.projectBriefs[clean] = cfg.projectBriefs[from];
+    delete cfg.projectBriefs[from];
+  }
   writeJson(CONFIG_PATH, cfg, true);
   for (const job of loadJobs()) if (job.project_id === from) job.project_id = clean;
   scheduleWrite();
@@ -187,6 +207,7 @@ export function deleteProject(name) {
   const cfg = getConfig();
   cfg.projects = (cfg.projects || []).filter((n) => n !== name);
   cfg.archivedProjects = (cfg.archivedProjects || []).filter((n) => n !== name);
+  if (cfg.projectBriefs?.[name] != null) delete cfg.projectBriefs[name];
   writeJson(CONFIG_PATH, cfg, true);
   const list = loadJobs();
   let removed = 0;

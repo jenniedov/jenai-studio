@@ -277,5 +277,13 @@
   "confirmBatch": {
     "title": "Generate {count}?",
     "body": "This will make {count} at about ${cost}."
+  },
+  "brief": {
+    "title": "Brief",
+    "emptyHint": "Add notes about this project — the agent reads them",
+    "placeholder": "What is this project? Brand, colors, aspect ratio, tone, characters to keep consistent… The agent reads this and can add to it.",
+    "note": "The agent reads this on entry and can update it.",
+    "save": "Save brief",
+    "saving": "Saving…"
   }
 }

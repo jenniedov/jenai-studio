@@ -40,7 +40,9 @@ immediately — no interview. Only a vague or "help me" request triggers
 
 ## The core loop
 1. `create_project({name})` — short, natural, **in the person's language** ("פאודה",
-   not an English marketing title); use it as `project` all session.
+   not an English marketing title); use it as `project` all session. Then
+   `get_project_brief({project})` and follow it; save durable preferences with
+   `set_project_brief`.
 2. `list_models({type})` → pick a model; `get_model_options({model})` → see valid options.
 3. `estimate_cost(...)` → state the cost in one line (don't block — it's their money).
 4. `generate_image` / `generate_video` / `edit_image` (references: local paths or URLs; batches: `count`).
@@ -51,9 +53,9 @@ immediately — no interview. Only a vague or "help me" request triggers
 
 ## Tools (jenai-studio MCP)
 `list_models`, `get_model_options`, `estimate_cost`, `list_projects`, `create_project`,
-`rename_project`, `generate_image`, `generate_video`, `edit_image`, `get_job`,
-`check_jobs`, `list_assets`, `list_project_assets`, `save_asset`, `tag_asset`,
-`list_skills`, `get_skill`.
+`rename_project`, `get_project_brief`, `set_project_brief`, `generate_image`,
+`generate_video`, `edit_image`, `get_job`, `check_jobs`, `list_assets`,
+`list_project_assets`, `save_asset`, `tag_asset`, `list_skills`, `get_skill`.
 
 Keep every asset in one project. Show results. If a generation errors, the returned
 message is usually actionable — adjust or relay it. If the connection drops after

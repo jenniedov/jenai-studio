@@ -25,6 +25,11 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
    "נרות סתיו", not "Night Protocol — Powder Thriller"). It's their folder label,
    not a marketing title. Use that exact name as `project` for **every** generation
    this session, so all the output lands together.
+3. **Read the project brief** — `get_project_brief({project})`. It's the person's
+   durable notes on this project (brand, colors, aspect ratio, tone, characters to
+   keep). Follow it. When they tell you something worth remembering for next time
+   ("always 9:16", "brand teal is #0f766e", "keep this character"), save it with
+   `set_project_brief` (it replaces the whole brief, so read first and append).
 
 ## The loop for any generation
 1. **Pick a model.** Call `list_models({type})` (image or video). Choose by the
@@ -74,6 +79,9 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
 ## Sets & series
 - For "N images", prefer one `generate_image` call with `count: N`. For a series
   with *different* prompts (a storyboard, variations), see the `make-a-set` skill.
+- For a **character sheet / turnaround / model sheet**, use the `character-sheet`
+  skill — it carries the studio's house style (headless-left panel, flat 18% gray,
+  shadowless light). Don't freehand it.
 
 ## Etiquette
 - Keep everything in the current project; don't scatter across projects.

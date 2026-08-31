@@ -24,6 +24,8 @@ export const api = {
   reorderProjects: (projects) => jsend('/projects/order', 'POST', { projects }),
   archiveProject: (name, archived) => jsend('/projects/archive', 'POST', { name, archived }),
   renameProject: (from, to) => jsend('/projects/rename', 'POST', { from, to }),
+  projectBrief: (project) => jget(`/projects/brief?project=${encodeURIComponent(project)}`),
+  setProjectBrief: (project, brief) => jsend('/projects/brief', 'POST', { project, brief }),
   deleteProject: (name) => jsend(`/projects/${encodeURIComponent(name)}`, 'DELETE'),
   setKey: (provider, key) => jsend('/keys', 'POST', { provider, key }),
   disableProvider: (provider, disabled) => jsend('/providers/disable', 'POST', { provider, disabled }),

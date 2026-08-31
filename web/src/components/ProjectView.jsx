@@ -3,6 +3,7 @@ import { useStudio } from '../lib/studio.jsx';
 import { api } from '../lib/api.js';
 import MediaGrid from './MediaGrid.jsx';
 import AssetsPanel from './AssetsPanel.jsx';
+import ProjectBrief from './ProjectBrief.jsx';
 import Lightbox from './Lightbox.jsx';
 import ErrorModal from './ErrorModal.jsx';
 
@@ -33,6 +34,7 @@ export default function ProjectView() {
         <button className="btn btn-ghost back-btn" onClick={() => setView('projects')}>← {t('projects.title')}</button>
         <span className="title">{name}</span>
       </div>
+      {currentProject !== 'all' && <ProjectBrief />}
       {currentProject !== 'all' && <AssetsPanel />}
       <div className="gallery-scroll">
         {/* No `type` → the grid shows images and videos together for this project. */}
