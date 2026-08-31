@@ -37,8 +37,17 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
    Do **not** block on it — it's their money; just be transparent.
 4. **Generate** — `generate_image` / `generate_video`. For several images, pass
    `count` (1–20). Omit `provider` to auto-pick, or set `kie` / `oxen` / `openrouter`.
-5. **Report** — the tool returns links + previews. Say what you made and that it's
-   in the "<project>" project in their browser.
+5. **Wait by polling, never by blocking.** Generation is **asynchronous**: the
+   generate tool submits the job(s) and returns quickly — sometimes with the
+   finished images, often with **job ids that are still running** (this is normal,
+   especially for video, which can take up to ~15 minutes, and for heavy 2K/large
+   batches). When you get back "still generating" + job ids:
+   - **Do NOT resubmit** — that spends money twice. The studio is already working.
+   - Call **`check_jobs({ job_ids: [...] })`** to see the current status without
+     waiting. Repeat every ~30–60s (a bit longer for video) until they're done.
+   - The person also watches them appear live in the JenAI Studio browser tab.
+6. **Report** — once done, the results carry links + previews. Say what you made and
+   that it's in the "<project>" project in their browser.
 
 ## Choosing a model (rules of thumb)
 - **General images / characters / references:** `nano-banana-pro` (flagship) or `nano-banana-2` (fast).

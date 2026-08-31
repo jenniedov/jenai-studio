@@ -35,6 +35,9 @@ export default function AgentView() {
     '  and show me the result links. Name the project in MY language, short and',
     '  natural — the way I would say it — not an English marketing title.',
     '- You do NOT need to start the studio — it launches on your first tool call.',
+    '- Generation is async: generate_image / generate_video return fast, often with',
+    '  still-running job ids (video can take up to ~15 min). Poll check_jobs every',
+    '  ~30–60s until done — never resubmit a running job.',
     '',
     'Now ask me what I want to create.',
   ].join('\n');

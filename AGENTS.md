@@ -44,12 +44,16 @@ immediately — no interview. Only a vague or "help me" request triggers
 2. `list_models({type})` → pick a model; `get_model_options({model})` → see valid options.
 3. `estimate_cost(...)` → state the cost in one line (don't block — it's their money).
 4. `generate_image` / `generate_video` / `edit_image` (references: local paths or URLs; batches: `count`).
+   These are **async**: they return fast, often with still-running job ids (normal
+   for video — up to ~15 min — and heavy batches). Poll `check_jobs({job_ids})`
+   every ~30–60s until done; NEVER resubmit a running job (it costs money).
 5. Report links; everything lands in the project they're watching.
 
 ## Tools (jenai-studio MCP)
 `list_models`, `get_model_options`, `estimate_cost`, `list_projects`, `create_project`,
-`generate_image`, `generate_video`, `edit_image`, `get_job`, `list_assets`,
-`list_project_assets`, `save_asset`, `tag_asset`, `list_skills`, `get_skill`.
+`rename_project`, `generate_image`, `generate_video`, `edit_image`, `get_job`,
+`check_jobs`, `list_assets`, `list_project_assets`, `save_asset`, `tag_asset`,
+`list_skills`, `get_skill`.
 
 Keep every asset in one project. Show results. If a generation errors, the returned
 message is usually actionable — adjust or relay it. If the connection drops after

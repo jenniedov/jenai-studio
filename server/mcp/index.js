@@ -67,29 +67,6 @@ function mimeOf(name) {
 }
 const abs = (u) => (u && u.startsWith('/api/') ? `${BASE}${u}` : u);
 
-// Poll a job to completion. Resilient to the studio restarting mid-poll: a
-// dropped connection doesn't abort the wait — the job keeps running (or is
-// already saved) server-side, so we keep retrying until the studio is back.
-async function waitJob(id, { timeoutMs = 300000, intervalMs = 2500 } = {}) {
-  const start = Date.now();
-  let misses = 0;
-  let last = { job_id: id, status: 'queued' };
-  for (;;) {
-    try {
-      last = await api(`/jobs/${id}`);
-      misses = 0;
-      if (last.status === 'done' || last.status === 'error') return last;
-    } catch {
-      // Studio unreachable (restart / crash). ensureStudio on the next call
-      // will relaunch it; give it up to ~12 tries before giving up on waiting.
-      misses += 1;
-      if (misses > 12) return { ...last, job_id: id, status: 'unknown' };
-    }
-    if (Date.now() - start > timeoutMs) return { ...last, job_id: id, status: 'timeout' };
-    await sleep(misses ? 5000 : intervalMs);
-  }
-}
-
 // Accept a reference as a local file path, an /api/files URL, or a public URL.
 async function toRef(x) {
   const s = typeof x === 'string' ? x : (x?.url || x?.path);
@@ -104,7 +81,15 @@ async function toRef(x) {
   return { role: 'reference', url: s };
 }
 
-async function runGeneration({ task, project, model, provider, prompt, options, input_images, count }) {
+// How long a generate_* tool call is allowed to wait for results before it
+// hands back job ids for polling. Kept well under any MCP client's request
+// timeout (Claude Code/Codex close the tool call after ~60s) — the studio keeps
+// processing the jobs in the background regardless, so returning early loses
+// nothing. Override with JENAI_MCP_WAIT_MS.
+const WAIT_MS = Number(process.env.JENAI_MCP_WAIT_MS || 25000);
+
+// Submit generation and return the job ids immediately (does NOT wait for them).
+async function submitGeneration({ task, project, model, provider, prompt, options, input_images, count }) {
   const refs = [];
   for (const x of input_images || []) { const r = await toRef(x); if (r) refs.push(r); }
   const body = {
@@ -116,9 +101,38 @@ async function runGeneration({ task, project, model, provider, prompt, options, 
     options: options || {},
   };
   const { jobs } = await post('/generate', body);
-  const done = [];
-  for (const j of jobs) done.push(await waitJob(j.job_id));
-  return done;
+  return jobs.map((j) => j.job_id);
+}
+
+// Poll a set of job ids until they all settle (done/error) OR the time budget
+// runs out. Never longer than budgetMs, so the tool call can't outlive the
+// client timeout. Returns the latest job objects (some may still be running).
+async function collectJobs(ids, { budgetMs }) {
+  const start = Date.now();
+  const byId = new Map(ids.map((id) => [id, { job_id: id, status: 'queued' }]));
+  for (;;) {
+    let pending = false;
+    for (const id of ids) {
+      const cur = byId.get(id);
+      if (cur.status === 'done' || cur.status === 'error') continue;
+      try {
+        const j = await api(`/jobs/${id}`);
+        byId.set(id, j);
+        if (j.status !== 'done' && j.status !== 'error') pending = true;
+      } catch { pending = true; }
+    }
+    if (!pending) break;
+    if (Date.now() - start > budgetMs) break;
+    await sleep(2500);
+  }
+  return ids.map((id) => byId.get(id));
+}
+
+// Submit, wait briefly, then return whatever's ready + job ids for the rest.
+async function generateAndReport(args, { task, budgetMs = WAIT_MS, inlineImages = true }) {
+  const ids = await submitGeneration({ task, ...args });
+  const jobs = await collectJobs(ids, { budgetMs });
+  return resultContent(jobs, { inlineImages });
 }
 
 // Turn finished jobs into MCP content: a text summary, inline image previews,
@@ -145,9 +159,22 @@ function resultContent(jobs, { inlineImages = true } = {}) {
     } else if (j.status === 'unknown' || j.status === 'timeout') {
       lines.push(`${num(i)}⚠ lost contact while waiting for job ${j.job_id} — it may well have FINISHED. Check get_job({job_id:"${j.job_id}"}) or list_assets before regenerating (regenerating costs money).`);
     } else {
-      lines.push(`${num(i)}… ${j.model} still ${j.status}`);
+      lines.push(`${num(i)}⏳ still ${j.status} — job ${j.job_id}`);
     }
   });
+  // Anything not settled: tell the agent to poll rather than resubmit. This is
+  // the normal path for videos (minutes) and heavy image batches — the studio
+  // keeps working; the tool call just returned early to stay under the client
+  // timeout.
+  const pending = jobs.filter((j) => j.status !== 'done' && j.status !== 'error');
+  if (pending.length) {
+    const idList = pending.map((j) => j.job_id);
+    content.push({ type: 'text', text:
+      `⏳ ${pending.length} still generating — this is normal (images take ~1–2 min, video can take up to ~15 min). `
+      + `The studio keeps working in the background; nothing is lost. Do NOT resubmit (it costs money). `
+      + `Wait, then call check_jobs({ job_ids: ${JSON.stringify(idList)} }) — repeat every ~30–60s until they're done. `
+      + `They also appear live in the JenAI Studio browser tab.` });
+  }
   content.unshift({ type: 'text', text: lines.join('\n') || 'No results.' });
   content.push({ type: 'text', text: '```json\n' + JSON.stringify({ results: structured }, null, 2) + '\n```' });
   return { content };
@@ -257,25 +284,35 @@ const genSchema = {
 
 server.registerTool('generate_image', {
   title: 'Generate image(s)',
-  description: 'Generate one or more images into a project and wait for them. Returns links + inline previews. Set count for a batch.',
+  description: 'Generate one or more images into a project. Submits and waits briefly; if they finish fast you get links + inline previews, otherwise you get job ids to poll with check_jobs (the studio keeps working — never resubmit). Set count for a batch.',
   inputSchema: { ...genSchema, count: z.number().optional().describe('how many (1–20)') },
-}, async (a) => resultContent(await runGeneration({ task: 'image', ...a })));
+}, async (a) => generateAndReport(a, { task: 'image' }));
 
 server.registerTool('generate_video', {
   title: 'Generate video',
-  description: 'Generate a video into a project and wait for it. Options like duration/generate_audio come from get_model_options.',
+  description: 'Generate a video into a project. Video takes minutes (up to ~15), so this returns a job id almost immediately — then poll check_jobs every ~30–60s until it is done. NEVER resubmit while it is running (it costs money). Options like duration/generate_audio come from get_model_options.',
   inputSchema: genSchema,
-}, async (a) => resultContent(await runGeneration({ task: 'video', ...a }), { inlineImages: false }));
+}, async (a) => generateAndReport(a, { task: 'video', budgetMs: Math.min(WAIT_MS, 8000), inlineImages: false }));
 
 server.registerTool('edit_image', {
   title: 'Edit image',
-  description: 'Edit/restyle an existing image by using it as a reference (reference-to-image). Give the image path/URL and a prompt describing the change.',
+  description: 'Edit/restyle an existing image by using it as a reference (reference-to-image). Give the image path/URL and a prompt describing the change. Submits and waits briefly; poll check_jobs if it is not done yet.',
   inputSchema: { project: z.string(), model: z.string(), provider: z.string().optional(), image: z.string(), prompt: z.string(), options: z.record(z.any()).optional() },
-}, async ({ image, ...a }) => resultContent(await runGeneration({ task: 'image', input_images: [image], ...a })));
+}, async ({ image, ...a }) => generateAndReport({ input_images: [image], ...a }, { task: 'image' }));
 
 server.registerTool('get_job', {
   title: 'Get job', description: 'Get the status/result of one generation job.', inputSchema: { job_id: z.string() },
 }, async ({ job_id }) => text(await api(`/jobs/${job_id}`)));
+
+server.registerTool('check_jobs', {
+  title: 'Check jobs',
+  description: 'Check the current status of one or more generation jobs WITHOUT waiting — returns immediately with links + inline previews for the finished ones. Use this to poll jobs that generate_image / generate_video handed back as still-running. Repeat every ~30–60s until all are done. Never resubmit a job that is still running.',
+  inputSchema: { job_ids: z.array(z.string()) },
+}, async ({ job_ids }) => {
+  const jobs = [];
+  for (const id of job_ids) { try { jobs.push(await api(`/jobs/${id}`)); } catch { jobs.push({ job_id: id, status: 'unknown' }); } }
+  return resultContent(jobs, { inlineImages: true });
+});
 
 server.registerTool('list_assets', {
   title: 'List assets', description: 'List the images/videos already in a project.',
