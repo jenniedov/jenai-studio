@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useStudio } from '../lib/studio.jsx';
 
 // A copy-paste onboarding page for the student's coding agent: connect the MCP,
-// then just ask. The agent starts the studio itself, so there's no manual server
-// step. Everything here is language-neutral code the student hands to their agent.
+// then hand it the partner prompt (it reads intent — make a clear brief straight
+// away, or run discovery when the student is unsure). The agent starts the studio
+// itself, so there's no manual server step. Everything here is language-neutral.
 export default function AgentView() {
   const { t } = useStudio();
 
@@ -13,19 +14,27 @@ export default function AgentView() {
   const ANTIGRAVITY = '{\n  "mcpServers": {\n    "jenai-studio": {\n      "command": "node",\n      "args": ["<full path>/server/mcp/index.js"]\n    }\n  }\n}';
   const GENERIC = 'command: node\nargs: ["server/mcp/index.js"]';
   const PROMPT = [
-    'You have the "jenai-studio" MCP connected — use it to create images and videos for me.',
+    'You have the "jenai-studio" MCP connected. You are my creative production partner —',
+    'help me get to a finished image or video, not just call tools.',
     '',
     'How to work:',
-    '1) Read the `studio` skill first (call the get_skill tool). It is your operating manual.',
+    '1) Read the `creative-director` skill first (call the get_skill tool). It tells you',
+    '   how to read my intent and how much to ask.',
+    '   - If my request is concrete ("three images of a cat", "a 5s clip of waves"),',
+    '     just make it — do NOT interview me. Read the `studio` skill and generate.',
+    '   - If I am vague or unsure ("a video but no idea what", "something for my launch"),',
+    '     run discovery: ask one structured question at a time (the `asking-the-user`',
+    '     skill), propose a concept, then produce it in stages, pausing for my okay.',
     '2) create_project with a short name for what I am building; use it for everything this session.',
     '3) Generate into that project with generate_image / generate_video / edit_image.',
     '   - Call list_models / get_model_options to pick a model and valid options.',
-    '   - Call estimate_cost and tell me the price (one line). Do not block on it.',
+    '   - Call estimate_cost and tell me the price (one line) before a paid batch. Do not block on it.',
     '4) Show me the result links. I watch them appear in the JenAI Studio browser tab.',
     '',
     'You do NOT need to start the studio — it launches on your first tool call.',
     '',
-    'Now, here is what I want you to make: <describe it — e.g. "10 launch images of a candle brand, warm minimalist">',
+    'Here is what I want (or "help me figure out what to make"): <describe it, e.g.',
+    '"10 launch images of a candle brand, warm minimalist" — or just "I want to make a video">',
   ].join('\n');
 
   const ALL = [

@@ -3,7 +3,7 @@
   "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "agent": "Agent", "update": "Update", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
   "agent": {
     "heading": "Connect your coding agent",
-    "subtitle": "Give your agent (Claude Code, Codex, Antigravity) access to the studio, then just ask it to create.",
+    "subtitle": "Give your agent (Claude Code, Codex, Antigravity) access to the studio, then create with it — from a clear brief, or \"help me figure out what to make\".",
     "note": "No server to run — the agent starts the studio itself on the first request.",
     "connect": "Set up (once)",
     "connectDesc": "One command installs everything and wires Claude Code, Codex + Antigravity.",
@@ -13,7 +13,7 @@
     "step2antigravity": "Antigravity — ~/.gemini/config/mcp_config.json",
     "step2generic": "Any other MCP client",
     "prompt": "Give your agent this",
-    "promptDesc": "Paste it into your agent, then describe what to create.",
+    "promptDesc": "Paste it into your agent, then tell it what to make — or ask it to help you figure it out.",
     "toolsdesc": "Browse everything it can do in the \"Skills\" tab.",
     "copy": "Copy",
     "copied": "Copied",

@@ -3,7 +3,7 @@
   "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "agent": "סוכן", "update": "עדכון", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
   "agent": {
     "heading": "לחבר את הסוכן שלכם",
-    "subtitle": "נותנים לסוכן (Claude Code, Codex, Antigravity) גישה לסטודיו\nואז פשוט מבקשים ממנו ליצור",
+    "subtitle": "נותנים לסוכן (Claude Code, Codex, Antigravity) גישה לסטודיו\nואז יוצרים איתו — מבריף ברור, או \"עזור לי להבין מה לעשות\"",
     "note": "לא צריך להריץ שרת — הסוכן מפעיל את הסטודיו לבד בפעם הראשונה",
     "connect": "התקנה וחיבור (פעם אחת)",
     "connectDesc": "פקודה אחת מתקינה הכל ומחברת את Claude Code, Codex ו-Antigravity",
@@ -13,7 +13,7 @@
     "step2antigravity": "Antigravity — ~/.gemini/config/mcp_config.json",
     "step2generic": "כל לקוח MCP אחר",
     "prompt": "נותנים לסוכן את זה",
-    "promptDesc": "מדביקים בסוכן ואז מתארים מה רוצים ליצור",
+    "promptDesc": "מדביקים בסוכן ואז אומרים לו מה ליצור — או מבקשים ממנו לעזור להחליט",
     "toolsdesc": "אפשר לעיין בכל היכולות בלשונית \"יכולות\"",
     "copy": "העתקה",
     "copied": "הועתק",
