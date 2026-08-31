@@ -115,9 +115,17 @@ export const openrouter = {
   },
 };
 
-// Text/image→video via POST /videos (async). frame_images = first/last-frame
-// control (image_to_x); input_references = style refs (reference_to_x). Returns
-// { id, polling_url, status }; we hand back the id as the jobRef to poll.
+// Text/image→video via POST /videos (async). Returns { id, polling_url, status };
+// we hand back the id as the jobRef to poll.
+//
+// ALL references go in `input_references` (subject/content guides) — NOT
+// `frame_images`. Two reasons this matters when there are multiple references
+// (e.g. a person + a location): (1) frame_images only takes ONE image, so the
+// others (the person!) would be dropped; (2) a forced first_frame makes the video
+// inherit THAT image's shape, so a 16:9 location frame overrode a requested 9:16.
+// With input_references, every reference informs the video and `aspect_ratio`
+// controls the frame. (A true "start from this exact frame" mode can be added
+// later behind an explicit flag.)
 async function submitVideo(req, ctx) {
   const { aspect } = normSize(req);
   const body = { model: ctx.providerSlug, prompt: req.prompt };
@@ -126,11 +134,7 @@ async function submitVideo(req, ctx) {
   if (aspect) body.aspect_ratio = aspect;
   const urls = (req.input_images || []).map((i) => i.url).filter(Boolean);
   if (urls.length) {
-    if (req.mode === 'image_to_x') {
-      body.frame_images = [{ type: 'image_url', image_url: { url: urls[0] }, frame_type: 'first_frame' }];
-    } else {
-      body.input_references = urls.map((u) => ({ type: 'image_url', image_url: { url: u } }));
-    }
+    body.input_references = urls.map((u) => ({ type: 'image_url', image_url: { url: u } }));
   }
   ctx.applyOptions?.(body); // config-driven custom options mapped to openrouter
   if (/^openai\//.test(ctx.providerSlug)) body.provider = { data_collection: 'allow' };
