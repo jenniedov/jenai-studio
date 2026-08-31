@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { api } from '../lib/api.js';
 import { useStudio } from '../lib/studio.jsx';
 import { useDialog } from './Dialog.jsx';
@@ -13,6 +13,7 @@ export default function StudioView({ type }) {
   const { t, projects, setProjects, currentProject, setCurrentProject } = useStudio();
   const dialog = useDialog();
   const [open, setOpen] = useState(null);
+  const listRef = useRef([]); // grid order, for ←/→ navigation in the lightbox
   const [errJob, setErrJob] = useState(null);
 
   const newProject = async () => {
@@ -39,12 +40,12 @@ export default function StudioView({ type }) {
       </div>
 
       <div className="gallery-scroll">
-        <MediaGrid type={type} onOpen={openJob} onError={setErrJob} />
+        <MediaGrid type={type} onOpen={openJob} onError={setErrJob} listRef={listRef} />
       </div>
 
       <PromptBar type={type} />
 
-      {open && <Lightbox job={open} onClose={() => setOpen(null)} />}
+      {open && <Lightbox job={open} onClose={() => setOpen(null)} listRef={listRef} onNavigate={openJob} />}
       {errJob && <ErrorModal t={t} job={errJob} onClose={() => setErrJob(null)} />}
     </section>
   );

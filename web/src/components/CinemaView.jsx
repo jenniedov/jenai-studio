@@ -27,6 +27,7 @@ export default function CinemaView() {
   const [showLook, setShowLook] = useState(true);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(null);
+  const listRef = useRef([]); // grid order, for ←/→ navigation in the lightbox
   const [errJob, setErrJob] = useState(null);
   const promptRef = useRef(null);
 
@@ -72,7 +73,7 @@ export default function CinemaView() {
       </div>
 
       <div className="gallery-scroll">
-        <MediaGrid type="image" onOpen={setOpen} onError={setErrJob} />
+        <MediaGrid type="image" onOpen={setOpen} onError={setErrJob} listRef={listRef} />
       </div>
 
       <div className="promptbar cinema-bar">
@@ -119,7 +120,7 @@ export default function CinemaView() {
         </div>
       </div>
 
-      {open && <Lightbox job={open} onClose={() => setOpen(null)} />}
+      {open && <Lightbox job={open} onClose={() => setOpen(null)} listRef={listRef} onNavigate={setOpen} />}
       {errJob && <ErrorModal t={t} job={errJob} onClose={() => setErrJob(null)} />}
     </section>
   );

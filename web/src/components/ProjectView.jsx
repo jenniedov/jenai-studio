@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useStudio } from '../lib/studio.jsx';
 import { api } from '../lib/api.js';
 import MediaGrid from './MediaGrid.jsx';
@@ -13,6 +13,7 @@ export default function ProjectView() {
   const { t, currentProject, setView } = useStudio();
   const [open, setOpen] = useState(null);
   const [errJob, setErrJob] = useState(null);
+  const listRef = useRef([]); // grid order, for ←/→ navigation in the lightbox
   const openJob = (job) => { localStorage.setItem('jenai.lastViewed', job.job_id); setOpen(job); };
   const name = currentProject === 'all' ? t('gallery.all') : currentProject;
 
@@ -35,9 +36,9 @@ export default function ProjectView() {
       {currentProject !== 'all' && <AssetsPanel />}
       <div className="gallery-scroll">
         {/* No `type` → the grid shows images and videos together for this project. */}
-        <MediaGrid onOpen={openJob} onError={setErrJob} onSaveAsset={currentProject !== 'all' ? saveAsset : undefined} />
+        <MediaGrid onOpen={openJob} onError={setErrJob} onSaveAsset={currentProject !== 'all' ? saveAsset : undefined} listRef={listRef} />
       </div>
-      {open && <Lightbox job={open} onClose={() => setOpen(null)} />}
+      {open && <Lightbox job={open} onClose={() => setOpen(null)} listRef={listRef} onNavigate={openJob} />}
       {errJob && <ErrorModal t={t} job={errJob} onClose={() => setErrJob(null)} />}
     </section>
   );

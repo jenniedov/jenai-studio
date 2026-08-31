@@ -4,7 +4,10 @@ import { useStudio } from '../lib/studio.jsx';
 
 // Detail drawer for a finished generation. Image/video on the left stage,
 // info + actions on the right. Close via ×, backdrop, or Esc.
-export default function Lightbox({ job, onClose }) {
+// With `listRef` (the grid's current order) + `onNavigate`, the ←/→ arrow keys
+// step between the generations of the tab — visually (RTL-aware): the arrow
+// moves the selection in the direction pressed.
+export default function Lightbox({ job, onClose, listRef, onNavigate }) {
   const { t, turnToVideo, setImageRefs, setVideoRef, setRecreate, setView } = useStudio();
   const [tab, setTab] = useState('info');
   const [copied, setCopied] = useState(false);
@@ -32,10 +35,25 @@ export default function Lightbox({ job, onClose }) {
   };
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      // Don't steal arrows from text fields (comments, inputs).
+      const el = e.target;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+      const list = listRef?.current;
+      if (!onNavigate || !list?.length) return;
+      const i = list.findIndex((j) => j.job_id === job.job_id);
+      if (i < 0) return;
+      // Visual direction: in RTL the grid flows right→left, so the arrows flip.
+      const rtl = getComputedStyle(document.body).direction === 'rtl';
+      const forward = rtl ? e.key === 'ArrowLeft' : e.key === 'ArrowRight';
+      const next = list[i + (forward ? 1 : -1)];
+      if (next) { e.preventDefault(); onNavigate(next); }
+    };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, onNavigate, listRef, job.job_id]);
 
   const copyPrompt = async () => {
     try {

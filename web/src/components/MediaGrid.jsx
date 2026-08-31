@@ -8,7 +8,7 @@ const PAGE = 40; // items per page — keeps the DOM light at thousands of jobs
 // A scrollable, paginated media grid. Loads pages on scroll (never the whole
 // history), lazy-loads images, and shows video POSTERS — a real <video> is only
 // mounted on hover, so a project with thousands of clips stays responsive.
-export default function MediaGrid({ type, onOpen, onError, onSaveAsset }) {
+export default function MediaGrid({ type, onOpen, onError, onSaveAsset, listRef }) {
   const { t, currentProject, retryJob } = useStudio();
   const dialog = useDialog();
   const [jobs, setJobs] = useState([]);      // ordered newest-first
@@ -23,7 +23,10 @@ export default function MediaGrid({ type, onOpen, onError, onSaveAsset }) {
       (a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0),
     );
     setJobs(arr);
-  }, []);
+    // Share the grid's current order with the parent so the Lightbox can step
+    // through it with the arrow keys (done items only — the openable ones).
+    if (listRef) listRef.current = arr.filter((j) => j.status === 'done');
+  }, [listRef]);
 
   // Reset when project/type changes.
   useEffect(() => {
