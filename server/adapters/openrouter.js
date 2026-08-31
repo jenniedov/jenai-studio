@@ -44,9 +44,7 @@ export const openrouter = {
   signupUrl: 'https://openrouter.ai/keys',
 
   async submit(req, ctx) {
-    if (req.task !== 'image') {
-      return { error: ctx.makeError('BAD_REQUEST', { raw: { message: 'OpenRouter supports image generation only.' } }) };
-    }
+    if (req.task === 'video') return submitVideo(req, ctx);
     const urls = (req.input_images || []).map((i) => i.url).filter(Boolean);
 
     // Reference→image goes through chat completions (the Images endpoint ignores
@@ -81,7 +79,59 @@ export const openrouter = {
     if (!url) return { error: ctx.makeError('UNKNOWN', { status: res.status, raw: body }) };
     return { done: true, outputs: [{ type: 'image', url }] };
   },
+
+  // Video is async: submit returns a jobRef; the engine calls poll() until the
+  // job completes, then downloads the (auth-protected) content URL.
+  async poll(jobRef, ctx) {
+    let res;
+    try { res = await fetch(`${BASE}/videos/${encodeURIComponent(jobRef)}`, { headers: HEADERS(ctx.key) }); }
+    catch (e) { return { error: ctx.makeError('PROVIDER_DOWN', { raw: String(e) }) }; }
+    const b = await res.json().catch(() => null);
+    if (!res.ok || b?.error) return { error: mapOpenrouterError(res.status, b, ctx) };
+    const status = b?.status;
+    if (status === 'completed') {
+      const url = (b.unsigned_urls || [])[0];
+      if (!url) return { error: ctx.makeError('UNKNOWN', { status: res.status, raw: b }) };
+      // The content URL needs the API key to download — pass it as headers so the
+      // engine's downloadToFiles authenticates the fetch.
+      return { done: true, outputs: [{ type: 'video', url, headers: { Authorization: `Bearer ${ctx.key}` } }] };
+    }
+    if (status === 'failed') {
+      return { error: mapOpenrouterError(200, { error: { message: b?.error?.message || 'video generation failed' } }, ctx) };
+    }
+    return { done: false }; // pending / in_progress
+  },
 };
+
+// Text/image→video via POST /videos (async). frame_images = first/last-frame
+// control (image_to_x); input_references = style refs (reference_to_x). Returns
+// { id, polling_url, status }; we hand back the id as the jobRef to poll.
+async function submitVideo(req, ctx) {
+  const { aspect } = normSize(req);
+  const body = { model: ctx.providerSlug, prompt: req.prompt };
+  if (req.duration_seconds) body.duration = req.duration_seconds;
+  if (req.resolution) body.resolution = req.resolution;
+  if (aspect) body.aspect_ratio = aspect;
+  const urls = (req.input_images || []).map((i) => i.url).filter(Boolean);
+  if (urls.length) {
+    if (req.mode === 'image_to_x') {
+      body.frame_images = [{ type: 'image_url', image_url: { url: urls[0] }, frame_type: 'first_frame' }];
+    } else {
+      body.input_references = urls.map((u) => ({ type: 'image_url', image_url: { url: u } }));
+    }
+  }
+  ctx.applyOptions?.(body); // config-driven custom options mapped to openrouter
+  if (/^openai\//.test(ctx.providerSlug)) body.provider = { data_collection: 'allow' };
+
+  let res;
+  try { res = await fetch(`${BASE}/videos`, { method: 'POST', headers: HEADERS(ctx.key), body: JSON.stringify(body) }); }
+  catch (e) { return { error: ctx.makeError('PROVIDER_DOWN', { raw: String(e) }) }; }
+  const b = await res.json().catch(() => null);
+  if (!res.ok || b?.error) return { error: mapOpenrouterError(res.status, b, ctx) };
+  const id = b?.id;
+  if (!id) return { error: ctx.makeError('UNKNOWN', { status: res.status, raw: b }) };
+  return { done: false, jobRef: id };
+}
 
 // Reference→image via chat completions. The reference image(s) go in the message
 // as image_url content parts, which is the path Gemini/Nano-Banana actually
@@ -116,11 +166,11 @@ async function submitWithReference(req, ctx, urls) {
 function mapOpenrouterError(status, body, ctx) {
   const et = body?.error?.metadata?.error_type || '';
   const msg = body?.error?.message || et || '';
-  // OpenRouter blocks some models (notably OpenAI image models) unless the
-  // account's data policy allows them. Give a clear, actionable message.
+  // OpenRouter blocks some models (OpenAI image models, and most video models)
+  // unless the account's data policy allows the provider. Give an actionable message.
   if (/no endpoints available|data policy|guardrail/i.test(msg)) {
     const e = ctx.makeError('BAD_REQUEST', { status, raw: { message:
-      "OpenRouter is blocking this model for your account's data policy. Open https://openrouter.ai/settings/privacy → Zero Data Retention and turn the OpenAI toggle OFF so OpenAI image models (like GPT Image) can run — or pick a Google model (Nano Banana / Gemini) on OpenRouter, which works without that. Original: " + msg } });
+      "OpenRouter is blocking this model for your account's data policy. Open https://openrouter.ai/settings/privacy and allow the provider (enable prompt/data sharing for the model's provider — e.g. OpenAI, ByteDance/Seed, Google) so it can run. Video models and OpenAI image models generally need this; Google image models (Nano Banana / Gemini) work without it. Original: " + msg } });
     e.openrouterDataPolicy = true; // lets the engine mark this account not-eligible
     return e;
   }

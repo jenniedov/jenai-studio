@@ -64,8 +64,10 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
 ## Providers
 - Omit `provider` and the studio picks a sensible one. If they care about cost,
   compare with `estimate_cost` across providers and pick the cheapest that serves it.
-- `openrouter` serves the Gemini/GPT image families; `oxen` serves the most models;
-  `kie` is async. Video runs on `oxen`/`kie` (not `openrouter`).
+- `openrouter` serves the Gemini/GPT image families and many video models
+  (Seedance, Veo, Sora, Wan, Flux Video — async); `oxen` serves the most models;
+  `kie` is async. OpenRouter video needs the account's data policy to allow the
+  provider (openrouter.ai/settings/privacy) — the error says so if it's blocked.
 
 ## References & editing
 - To use images as references (style, subject, character), pass `input_images`

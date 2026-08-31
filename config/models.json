@@ -267,9 +267,47 @@
         "oxen": "flux-2-pro"
       },
       "options": [
-        { "key": "seed", "type": "int", "ui": "number", "label": { "en": "Seed", "he": "Seed" }, "placeholder": { "en": "random", "he": "אקראי" }, "map": { "oxen": "seed" } },
-        { "key": "guidance_scale", "type": "number", "ui": "number", "step": 0.1, "label": { "en": "Guidance", "he": "Guidance" }, "map": { "oxen": "guidance_scale" } },
-        { "key": "steps", "type": "int", "ui": "number", "label": { "en": "Steps", "he": "צעדים" }, "map": { "oxen": "num_inference_steps" } }
+        {
+          "key": "seed",
+          "type": "int",
+          "ui": "number",
+          "label": {
+            "en": "Seed",
+            "he": "Seed"
+          },
+          "placeholder": {
+            "en": "random",
+            "he": "אקראי"
+          },
+          "map": {
+            "oxen": "seed"
+          }
+        },
+        {
+          "key": "guidance_scale",
+          "type": "number",
+          "ui": "number",
+          "step": 0.1,
+          "label": {
+            "en": "Guidance",
+            "he": "Guidance"
+          },
+          "map": {
+            "oxen": "guidance_scale"
+          }
+        },
+        {
+          "key": "steps",
+          "type": "int",
+          "ui": "number",
+          "label": {
+            "en": "Steps",
+            "he": "צעדים"
+          },
+          "map": {
+            "oxen": "num_inference_steps"
+          }
+        }
       ]
     },
     {
@@ -296,9 +334,47 @@
         "oxen": "flux-2-flex"
       },
       "options": [
-        { "key": "seed", "type": "int", "ui": "number", "label": { "en": "Seed", "he": "Seed" }, "placeholder": { "en": "random", "he": "אקראי" }, "map": { "oxen": "seed" } },
-        { "key": "guidance_scale", "type": "number", "ui": "number", "step": 0.1, "label": { "en": "Guidance", "he": "Guidance" }, "map": { "oxen": "guidance_scale" } },
-        { "key": "steps", "type": "int", "ui": "number", "label": { "en": "Steps", "he": "צעדים" }, "map": { "oxen": "num_inference_steps" } }
+        {
+          "key": "seed",
+          "type": "int",
+          "ui": "number",
+          "label": {
+            "en": "Seed",
+            "he": "Seed"
+          },
+          "placeholder": {
+            "en": "random",
+            "he": "אקראי"
+          },
+          "map": {
+            "oxen": "seed"
+          }
+        },
+        {
+          "key": "guidance_scale",
+          "type": "number",
+          "ui": "number",
+          "step": 0.1,
+          "label": {
+            "en": "Guidance",
+            "he": "Guidance"
+          },
+          "map": {
+            "oxen": "guidance_scale"
+          }
+        },
+        {
+          "key": "steps",
+          "type": "int",
+          "ui": "number",
+          "label": {
+            "en": "Steps",
+            "he": "צעדים"
+          },
+          "map": {
+            "oxen": "num_inference_steps"
+          }
+        }
       ]
     },
     {
@@ -434,7 +510,8 @@
       ],
       "audio": true,
       "providers": {
-        "oxen": "bytedance-seedance-2-5-text-to-video"
+        "oxen": "bytedance-seedance-2-5-text-to-video",
+        "openrouter": "bytedance/seedance-2.5"
       }
     },
     {
@@ -466,7 +543,8 @@
       "audio": true,
       "providers": {
         "oxen": "bytedance-seedance-2-0-text-to-video",
-        "kie": "bytedance/seedance-2"
+        "kie": "bytedance/seedance-2",
+        "openrouter": "bytedance/seedance-2.0"
       }
     },
     {
@@ -495,7 +573,8 @@
       ],
       "audio": true,
       "providers": {
-        "oxen": "bytedance-seedance-2-0-fast-text-to-video"
+        "oxen": "bytedance-seedance-2-0-fast-text-to-video",
+        "openrouter": "bytedance/seedance-2.0-fast"
       }
     },
     {
@@ -524,7 +603,8 @@
       ],
       "audio": true,
       "providers": {
-        "oxen": "bytedance-seedance-2-0-mini-text-to-video"
+        "oxen": "bytedance-seedance-2-0-mini-text-to-video",
+        "openrouter": "bytedance/seedance-2.0-mini"
       }
     },
     {
@@ -551,10 +631,26 @@
       "audio": false,
       "providers": {
         "oxen": "google-veo-3-1-fast",
-        "kie": "veo3_fast"
+        "kie": "veo3_fast",
+        "openrouter": "google/veo-3.1"
       },
       "options": [
-        { "key": "seed", "type": "int", "ui": "number", "label": { "en": "Seed", "he": "Seed" }, "placeholder": { "en": "random", "he": "אקראי" }, "map": { "oxen": "seed" } }
+        {
+          "key": "seed",
+          "type": "int",
+          "ui": "number",
+          "label": {
+            "en": "Seed",
+            "he": "Seed"
+          },
+          "placeholder": {
+            "en": "random",
+            "he": "אקראי"
+          },
+          "map": {
+            "oxen": "seed"
+          }
+        }
       ]
     },
     {
@@ -579,8 +675,35 @@
         "kie": "kling-3.0/video"
       },
       "options": [
-        { "key": "negative_prompt", "type": "string", "ui": "text", "label": { "en": "Negative", "he": "שלילי" }, "placeholder": { "en": "what to avoid", "he": "ממה להימנע" }, "map": { "oxen": "negative_prompt" } },
-        { "key": "cfg_scale", "type": "number", "ui": "number", "step": 0.1, "label": { "en": "CFG", "he": "CFG" }, "map": { "oxen": "cfg_scale" } }
+        {
+          "key": "negative_prompt",
+          "type": "string",
+          "ui": "text",
+          "label": {
+            "en": "Negative",
+            "he": "שלילי"
+          },
+          "placeholder": {
+            "en": "what to avoid",
+            "he": "ממה להימנע"
+          },
+          "map": {
+            "oxen": "negative_prompt"
+          }
+        },
+        {
+          "key": "cfg_scale",
+          "type": "number",
+          "ui": "number",
+          "step": 0.1,
+          "label": {
+            "en": "CFG",
+            "he": "CFG"
+          },
+          "map": {
+            "oxen": "cfg_scale"
+          }
+        }
       ]
     },
     {
@@ -624,7 +747,8 @@
       "durationField": "seconds",
       "audio": false,
       "providers": {
-        "oxen": "openai-sora-2-pro"
+        "oxen": "openai-sora-2-pro",
+        "openrouter": "openai/sora-2-pro"
       }
     },
     {
@@ -652,11 +776,42 @@
       ],
       "audio": false,
       "providers": {
-        "oxen": "wan-v2-7-text-to-video"
+        "oxen": "wan-v2-7-text-to-video",
+        "openrouter": "alibaba/wan-2.7"
       },
       "options": [
-        { "key": "negative_prompt", "type": "string", "ui": "text", "label": { "en": "Negative", "he": "שלילי" }, "placeholder": { "en": "what to avoid", "he": "ממה להימנע" }, "map": { "oxen": "negative_prompt" } },
-        { "key": "seed", "type": "int", "ui": "number", "label": { "en": "Seed", "he": "Seed" }, "placeholder": { "en": "random", "he": "אקראי" }, "map": { "oxen": "seed" } }
+        {
+          "key": "negative_prompt",
+          "type": "string",
+          "ui": "text",
+          "label": {
+            "en": "Negative",
+            "he": "שלילי"
+          },
+          "placeholder": {
+            "en": "what to avoid",
+            "he": "ממה להימנע"
+          },
+          "map": {
+            "oxen": "negative_prompt"
+          }
+        },
+        {
+          "key": "seed",
+          "type": "int",
+          "ui": "number",
+          "label": {
+            "en": "Seed",
+            "he": "Seed"
+          },
+          "placeholder": {
+            "en": "random",
+            "he": "אקראי"
+          },
+          "map": {
+            "oxen": "seed"
+          }
+        }
       ]
     },
     {
@@ -686,7 +841,8 @@
       ],
       "audio": true,
       "providers": {
-        "oxen": "flux-3-video"
+        "oxen": "flux-3-video",
+        "openrouter": "black-forest-labs/flux-3-video"
       }
     }
   ]

@@ -17,7 +17,7 @@ const MODELS = JSON.parse(readFileSync(join(here, '..', 'config', 'models.json')
 
 export const BATCH_CAP = 20;
 const POLL_INTERVAL_MS = 3000;
-const POLL_MAX_TRIES = 120; // ~6 minutes
+const POLL_MAX_TRIES = 320; // ~16 minutes (video can take up to ~15 min)
 
 function findModel(key) {
   return MODELS.models.find((m) => m.key === key) || null;
