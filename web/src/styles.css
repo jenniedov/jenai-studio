@@ -525,3 +525,18 @@ a.btn.copy-mini { text-decoration: none; display: inline-flex; align-items: cent
 .gcard:hover .card-save { opacity: 1; }
 .gcard .card-save:hover { background: var(--accent); color: var(--cta-ink, #170f13); }
 .gcard .card-save.done { opacity: 1; background: rgba(46, 165, 106, .9); }
+
+/* ── Agent tab: simplified layout ──────────────────────────────────────── */
+.agent-simple { max-width: 720px; padding-top: 8px; }
+.agent-simple .page-title { margin: 0 0 10px; }
+.agent-instruction { color: var(--txt-soft); font-size: 15px; line-height: 1.6; font-weight: 600; margin: 0 0 20px; }
+.agent-code.hero { border-width: 1.5px; box-shadow: var(--shadow); }
+.agent-code.hero pre { padding: 16px 18px; font-size: 13px; max-height: 420px; }
+.agent-code-hint { color: var(--txt-faint); font-size: 12px; font-weight: 600; }
+.copy-big { padding: 9px 20px; font-size: 14px; font-weight: 800; }
+.agent-advanced { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 14px; }
+.agent-advanced > summary { cursor: pointer; color: var(--txt-soft); font-size: 13px; font-weight: 700; list-style: none; user-select: none; }
+.agent-advanced > summary::-webkit-details-marker { display: none; }
+.agent-advanced > summary::before { content: "▸"; display: inline-block; margin-inline-end: 6px; transition: transform .12s; }
+.agent-advanced[open] > summary::before { transform: rotate(90deg); }
+.agent-advanced .agent-mini:first-of-type { margin-top: 10px; }

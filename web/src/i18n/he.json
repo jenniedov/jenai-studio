@@ -3,7 +3,11 @@
   "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "agent": "סוכן", "update": "עדכון", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
   "agent": {
     "heading": "לחבר את הסוכן שלכם",
-    "subtitle": "נותנים לסוכן (Claude Code, Codex, Antigravity) גישה לסטודיו\nואז יוצרים איתו — מבריף ברור, או \"עזור לי להבין מה לעשות\"",
+    "subtitle": "פתחו סשן חדש ב-Claude Code, ‏Codex או Antigravity, הדביקו את הטקסט הזה, ואז דברו איתו על מה שבא לכם לייצר.",
+    "copyPrompt": "העתקת ההנחיה",
+    "pasteHint": "מדביקים בסוכן",
+    "advanced": "הגדרה ידנית (למתקדמים)",
+    "advancedDesc": "מעדיפים לחבר ידנית במקום להריץ setup? רושמים את ה-MCP לכל סוכן:",
     "note": "לא צריך להריץ שרת — הסוכן מפעיל את הסטודיו לבד בפעם הראשונה",
     "connect": "התקנה וחיבור (פעם אחת)",
     "connectDesc": "פקודה אחת מתקינה הכל ומחברת את Claude Code, Codex ו-Antigravity",

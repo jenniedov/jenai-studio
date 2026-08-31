@@ -3,7 +3,11 @@
   "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "agent": "Agent", "update": "Update", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
   "agent": {
     "heading": "Connect your coding agent",
-    "subtitle": "Give your agent (Claude Code, Codex, Antigravity) access to the studio, then create with it — from a clear brief, or \"help me figure out what to make\".",
+    "subtitle": "Open a new session in Claude Code, Codex, or Antigravity, paste this in, then just talk to it about what you want to create.",
+    "copyPrompt": "Copy the prompt",
+    "pasteHint": "Paste into your agent",
+    "advanced": "Manual setup (advanced)",
+    "advancedDesc": "Rather wire it yourself than run setup? Register the MCP per agent:",
     "note": "No server to run — the agent starts the studio itself on the first request.",
     "connect": "Set up (once)",
     "connectDesc": "One command installs everything and wires Claude Code, Codex + Antigravity.",
