@@ -10,6 +10,7 @@ export default function AgentView() {
   const CONNECT = 'npm run setup';
   const CLAUDE = 'claude mcp add jenai-studio -- node server/mcp/index.js';
   const CODEX = '[mcp_servers.jenai-studio]\ncommand = "node"\nargs = ["server/mcp/index.js"]';
+  const ANTIGRAVITY = '{\n  "mcpServers": {\n    "jenai-studio": {\n      "command": "node",\n      "args": ["<full path>/server/mcp/index.js"]\n    }\n  }\n}';
   const GENERIC = 'command: node\nargs: ["server/mcp/index.js"]';
   const PROMPT = [
     'You have the "jenai-studio" MCP connected — use it to create images and videos for me.',
@@ -37,6 +38,7 @@ export default function AgentView() {
     '   Claude Code also auto-detects it: just open `claude` in this repo and approve.',
     `   Manual — Claude Code:  ${CLAUDE}`,
     `   Manual — Codex (~/.codex/config.toml):\n${CODEX.split('\n').map((l) => `     ${l}`).join('\n')}`,
+    '   Manual — Antigravity (~/.gemini/config/mcp_config.json): add jenai-studio under "mcpServers".',
     '',
     '2) Give your agent this prompt:',
     '',
@@ -63,6 +65,8 @@ export default function AgentView() {
           <CodeBlock text={CLAUDE} t={t} />
           <div className="agent-mini">{t('agent.step2codex')}</div>
           <CodeBlock text={CODEX} t={t} />
+          <div className="agent-mini">{t('agent.step2antigravity')}</div>
+          <CodeBlock text={ANTIGRAVITY} t={t} />
           <div className="agent-mini">{t('agent.step2generic')}</div>
           <CodeBlock text={GENERIC} t={t} />
         </Step>

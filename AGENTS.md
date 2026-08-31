@@ -10,8 +10,10 @@ Studio browser tab, grouped into a project.
   (the first call may take ~15s to boot). Results appear in the browser at
   http://localhost:4317.
 - The MCP server is configured in `.mcp.json` (`node server/mcp/index.js`); Claude
-  Code auto-detects it in this repo. For other agents, `npm run connect` wires it,
-  or register it manually: `command: node`, `args: [server/mcp/index.js]`.
+  Code auto-detects it in this repo. `npm run setup` (or `npm run connect`) also
+  wires it into Claude Code, Codex (`~/.codex/config.toml`), and Gemini Antigravity
+  (`~/.gemini/config/mcp_config.json`). Otherwise register it manually with
+  `command: node`, `args: [server/mcp/index.js]`.
 
 ## Skills = your playbooks
 The `skill/` folder holds task playbooks (also readable via the MCP `list_skills` /

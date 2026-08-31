@@ -37,6 +37,21 @@ try {
   }
 } catch { /* leave Codex to manual setup if the write fails */ }
 
+// --- Gemini Antigravity (~/.gemini/config/mcp_config.json, shared by IDE + CLI) ---
+try {
+  const dir = join(homedir(), '.gemini', 'config');
+  const path = join(dir, 'mcp_config.json');
+  let cfg = {};
+  if (existsSync(path)) { try { cfg = JSON.parse(readFileSync(path, 'utf8')) || {}; } catch { cfg = {}; } }
+  cfg.mcpServers = cfg.mcpServers || {};
+  const entry = { command: 'node', args: [MCP] };
+  const already = JSON.stringify(cfg.mcpServers['jenai-studio']) === JSON.stringify(entry);
+  cfg.mcpServers['jenai-studio'] = entry; // merge — keep any other servers
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path, `${JSON.stringify(cfg, null, 2)}\n`);
+  done.push(already ? 'Antigravity (already configured)' : 'Antigravity (~/.gemini/config/mcp_config.json)');
+} catch { /* leave Antigravity to manual setup if the write fails */ }
+
 if (done.length) {
   console.log(`✓ Connected the jenai-studio MCP: ${done.join(', ')}`);
 } else {
