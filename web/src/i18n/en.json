@@ -165,7 +165,10 @@
     "provider": "Provider",
     "count": "Count",
     "noProvider": "No provider",
-    "noKey": "no key"
+    "noKey": "no key",
+    "noProviderNone": "This model isn't available on OpenRouter — enable Oxen in the Keys tab to use it.",
+    "noProviderDisabled": "{p} is turned off — re-enable it in the Keys tab to use this model.",
+    "noProviderNoKey": "Add a {p} key in the Keys tab to use this model."
   },
   "videos": {
     "createVideo": "Create Video",

@@ -563,3 +563,6 @@ a.btn.copy-mini { text-decoration: none; display: inline-flex; align-items: cent
 .brief-textarea:focus { outline: none; border-color: var(--accent); }
 .brief-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .brief-note { color: var(--txt-faint); font-size: 11.5px; }
+
+/* No-provider hint on the prompt bar (why the generate button is disabled) */
+.noprov-hint { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--magenta); background: rgba(216,45,63,.08); border: 1px solid rgba(216,45,63,.25); border-radius: var(--r-pill); padding: 6px 12px; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

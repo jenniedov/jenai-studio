@@ -261,6 +261,15 @@ app.listen(PORT, () => {
   backfillPosters().then((n) => { if (n) console.log(`  ✦ generated ${n} video thumbnail(s)`); });
   // Pull the price feed if the cache is stale (at most once a day).
   refreshFeed().then((r) => { if (r.reason === 'refreshed') console.log(`  ✦ price feed updated (${r.asOf})`); });
+  // Auto-verify OpenAI-on-OpenRouter once (free text-only probe) so GPT Image
+  // shows OpenRouter automatically for accounts that allow it — no hidden button,
+  // no manual "verify" step. Only when a key exists and we haven't confirmed yet.
+  (async () => {
+    const key = getKey('openrouter');
+    if (!key || getConfig().settings?.openrouterOpenaiVerified === true) return;
+    const r = await probeOpenaiEligibility(key);
+    if (r.eligible === true) { setOpenrouterOpenaiVerified(true); console.log('  ✦ OpenRouter: OpenAI image models enabled for this account'); }
+  })().catch(() => { /* best effort */ });
   console.log('');
   console.log(`  ✦ ${branding.name} is running`);
   console.log(`  ✦ open   http://localhost:${PORT}`);

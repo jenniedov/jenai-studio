@@ -307,6 +307,19 @@ export default function PromptBar({ type }) {
               })}
               onChange={setProvider} />
           )}
+          {provs.length === 0 && (() => {
+            // No usable provider — say WHY, so the disabled button isn't a mystery.
+            const slugIds = Object.keys(model?.providers || {});
+            const info = slugIds.map((id) => providers.find((p) => p.id === id)).filter(Boolean);
+            const disabled = info.filter((p) => p.disabled).map((p) => p.label);
+            const needKey = info.filter((p) => !p.disabled && !p.hasKey).map((p) => p.label);
+            let msg;
+            if (info.length === 0) msg = t('prompt.noProviderNone');
+            else if (disabled.length && !info.some((p) => !p.disabled)) msg = t('prompt.noProviderDisabled').replace('{p}', disabled.join(' / '));
+            else if (needKey.length) msg = t('prompt.noProviderNoKey').replace('{p}', needKey.join(' / '));
+            else msg = t('prompt.noProvider');
+            return <span className="noprov-hint" title={msg}>⚠ {msg}</span>;
+          })()}
           {schema.map(renderOption)}
           {!isVideo && (
             <div className="stepper">

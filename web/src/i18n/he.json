@@ -165,7 +165,10 @@
     "provider": "ספק",
     "count": "כמה",
     "noProvider": "אין ספק",
-    "noKey": "אין מפתח"
+    "noKey": "אין מפתח",
+    "noProviderNone": "המודל הזה לא זמין ב-OpenRouter — הפעילו את Oxen בלשונית מפתחות כדי להשתמש בו.",
+    "noProviderDisabled": "‏{p} כבוי — הפעילו אותו מחדש בלשונית מפתחות כדי להשתמש במודל הזה.",
+    "noProviderNoKey": "הוסיפו מפתח {p} בלשונית מפתחות כדי להשתמש במודל הזה."
   },
   "videos": {
     "createVideo": "יצירת סרטון",
