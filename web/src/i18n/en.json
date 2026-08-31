@@ -1,6 +1,16 @@
 {
   "app": { "tagline": "Make images and videos on your own machine" },
-  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "update": "Update", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "update": {
+    "available": "Update available",
+    "upToDate": "Up to date",
+    "current": "Current version: {sha}",
+    "title": "Update the studio",
+    "body": "{n} new update(s) — pull from GitHub and rebuild.",
+    "apply": "Update now",
+    "updating": "Updating…",
+    "failed": "Update failed"
+  },
   "skills": {
     "subtitle": "What the agent can do — add your own too.",
     "new": "New skill",

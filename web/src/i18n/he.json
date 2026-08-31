@@ -1,6 +1,16 @@
 {
   "app": { "tagline": "מייצרים תמונות וסרטונים על המחשב שלך" },
-  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "update": "עדכון", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "update": {
+    "available": "יש עדכון",
+    "upToDate": "הכל מעודכן",
+    "current": "הגרסה הנוכחית: {sha}",
+    "title": "לעדכן את הסטודיו",
+    "body": "יש {n} עדכונים חדשים\nנמשוך מגיטהאב ונבנה מחדש",
+    "apply": "לעדכן עכשיו",
+    "updating": "מעדכן...",
+    "failed": "העדכון נכשל"
+  },
   "skills": {
     "subtitle": "מה הסוכן יודע לעשות\nאפשר גם להוסיף משלכם",
     "new": "יכולת חדשה",

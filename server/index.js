@@ -17,6 +17,7 @@ import { probeOpenaiEligibility } from './adapters/openrouter.js';
 import { refreshFeed, priceTable, feedMeta } from './feed/prices.js';
 import { optionSchema } from './options.js';
 import { listSkills, getSkill, saveUserSkill, deleteUserSkill } from './skills.js';
+import { updateStatus, applyUpdate, rollbackUpdate, scheduleRestart } from './update.js';
 import {
   createJobs, processJob, estimateCost, publicJob, BATCH_CAP,
 } from './engine.js';
@@ -82,6 +83,14 @@ api.get('/skills', (_req, res) => res.json({ skills: listSkills() }));
 api.get('/skills/:id', (req, res) => { const s = getSkill(req.params.id); if (!s) return res.status(404).json({ error: 'not found' }); res.json(s); });
 api.post('/skills', (req, res) => { try { res.json(saveUserSkill(req.body || {})); } catch (e) { res.status(400).json({ error: String(e.message || e) }); } });
 api.delete('/skills/:id', (req, res) => { try { res.json(deleteUserSkill(req.params.id)); } catch (e) { res.status(400).json({ error: String(e.message || e) }); } });
+
+// Self-update (git pull → build → restart), Hermes-style.
+api.get('/update/check', (_req, res) => { try { res.json(updateStatus()); } catch (e) { res.status(500).json({ error: String(e.message || e) }); } });
+api.post('/update/apply', (_req, res) => {
+  try { const r = applyUpdate(); res.json({ ok: true, ...r }); if (r.applied) scheduleRestart(); }
+  catch (e) { res.status(400).json({ error: String(e.message || e) }); }
+});
+api.post('/update/rollback', (_req, res) => { try { const r = rollbackUpdate(); res.json({ ok: true, ...r }); scheduleRestart(); } catch (e) { res.status(400).json({ error: String(e.message || e) }); } });
 
 api.get('/prices', (_req, res) => res.json({ ...feedMeta(), table: priceTable() }));
 api.post('/prices/refresh', async (_req, res) => {
