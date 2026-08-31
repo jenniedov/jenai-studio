@@ -28,6 +28,41 @@ function refUrls(req) {
   return (req.input_images || []).map((i) => i.url).filter(Boolean);
 }
 
+// Kie's generation APIs only accept public http(s) reference URLs — a data:
+// URL comes back as "image_input file type not supported" (or a bare 500).
+// The engine inlines local files as data: URLs, so re-host those on Kie's own
+// File Upload API (same Bearer key, files kept ~3 days) and use the returned
+// public fileUrl instead.
+const UPLOAD_BASE = 'https://kieai.redpandaai.co/api';
+
+const EXT_BY_MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+
+async function resolveRefs(req, ctx) {
+  const images = req.input_images || [];
+  if (!images.some((i) => /^data:/i.test(i?.url || ''))) return { req };
+  const resolved = [];
+  for (const img of images) {
+    if (!/^data:/i.test(img?.url || '')) { resolved.push(img); continue; }
+    const mime = img.url.slice(5, img.url.indexOf(';'));
+    const fileName = `ref-${Date.now()}-${resolved.length}.${EXT_BY_MIME[mime] || 'png'}`;
+    let res;
+    try {
+      res = await fetch(`${UPLOAD_BASE}/file-base64-upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ctx.key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Data: img.url, uploadPath: 'jenai-refs', fileName }),
+      });
+    } catch (e) {
+      return { error: ctx.makeError('PROVIDER_DOWN', { raw: String(e) }) };
+    }
+    const body = await safeJson(res);
+    const url = body?.data?.fileUrl || body?.data?.downloadUrl;
+    if (!res.ok || !url) return { error: mapKieError(res.status, body, res.headers, ctx) };
+    resolved.push({ ...img, url });
+  }
+  return { req: { ...req, input_images: resolved } };
+}
+
 // Build the `input` object for the Jobs API, per family.
 function buildJobsInput(req, slug) {
   const fam = familyOf(slug);
@@ -69,6 +104,9 @@ export const kie = {
   signupUrl: 'https://kie.ai',
 
   async submit(req, ctx) {
+    const up = await resolveRefs(req, ctx);
+    if (up.error) return { error: up.error };
+    req = up.req;
     if (familyOf(ctx.providerSlug) === 'veo') return submitVeo(req, ctx);
 
     const input = buildJobsInput(req, ctx.providerSlug);
@@ -179,7 +217,11 @@ function mapKieError(status, body, headers, ctx) {
   let taxCode;
   // Kie sometimes returns HTTP 500 with a "Credits insufficient" message, so
   // check the message for credit exhaustion before the status-based mapping.
+  // Input-validation failures ("image_input file type not supported") arrive
+  // as code 500 too — sniff those out before 5xx falls into PROVIDER_DOWN,
+  // otherwise the UI tells the user to retry a request that can never succeed.
   if (/credit|balance|top up|insufficient/i.test(msg)) taxCode = 'INSUFFICIENT_CREDITS';
+  else if (/not supported|unsupported|file type|invalid (input|image|file|param|request)/i.test(msg)) taxCode = 'BAD_REQUEST';
   else if (code === 401 || code === 403 || code === 433) taxCode = 'AUTH_INVALID';
   else if (code === 402) taxCode = 'INSUFFICIENT_CREDITS';
   else if (code === 429) taxCode = 'RATE_LIMITED';

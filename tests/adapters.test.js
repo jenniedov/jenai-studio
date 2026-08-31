@@ -119,6 +119,59 @@ test('kie: task-level fail is mapped by message sniff', async () => {
   assert.equal(r.error.code, 'MODERATION_BLOCKED');
 });
 
+test('kie: 500 with a validation message -> BAD_REQUEST, not PROVIDER_DOWN', async () => {
+  mockFetch(async () => jsonResponse(500, { code: 500, msg: 'image_input file type not supported' }));
+  const r = await kie.submit(imageReq, ctx());
+  assert.equal(r.error.code, 'BAD_REQUEST');
+});
+
+test('kie: data: reference images are re-hosted via the File Upload API', async () => {
+  const calls = [];
+  mockFetch(async (url, opts) => {
+    calls.push(url);
+    if (/file-base64-upload$/.test(url)) {
+      const body = JSON.parse(opts.body);
+      assert.match(body.base64Data, /^data:image\/jpeg;base64,/);
+      assert.match(body.fileName, /\.jpg$/);
+      return jsonResponse(200, { success: true, code: 200, data: { fileUrl: 'https://kieai.redpandaai.co/files/jenai-refs/ref.jpg' } });
+    }
+    assert.match(url, /createTask$/);
+    const body = JSON.parse(opts.body);
+    assert.deepEqual(body.input.image_input, ['https://kieai.redpandaai.co/files/jenai-refs/ref.jpg']);
+    return jsonResponse(200, { data: { taskId: 'task_up' } });
+  });
+  const req = { ...imageReq, input_images: [{ url: 'data:image/jpeg;base64,AAAA' }] };
+  const r = await kie.submit(req, ctx({ providerSlug: 'google/nano-banana-pro' }));
+  assert.equal(calls.length, 2);
+  assert.equal(r.jobRef, 'task_up');
+});
+
+test('kie: public http reference images skip the upload hop', async () => {
+  const calls = [];
+  mockFetch(async (url, opts) => {
+    calls.push(url);
+    const body = JSON.parse(opts.body);
+    assert.deepEqual(body.input.image_input, ['https://example.com/ref.png']);
+    return jsonResponse(200, { data: { taskId: 'task_pub' } });
+  });
+  const req = { ...imageReq, input_images: [{ url: 'https://example.com/ref.png' }] };
+  const r = await kie.submit(req, ctx({ providerSlug: 'google/nano-banana-pro' }));
+  assert.deepEqual(calls.length, 1);
+  assert.equal(r.jobRef, 'task_pub');
+});
+
+test('kie: a failed reference upload surfaces a mapped error, no createTask call', async () => {
+  const calls = [];
+  mockFetch(async (url) => {
+    calls.push(url);
+    return jsonResponse(401, { code: 401, msg: 'unauthorized' });
+  });
+  const req = { ...imageReq, input_images: [{ url: 'data:image/png;base64,AAAA' }] };
+  const r = await kie.submit(req, ctx());
+  assert.equal(calls.length, 1);
+  assert.equal(r.error.code, 'AUTH_INVALID');
+});
+
 test('kie: 429 -> RATE_LIMITED with retryAfter', async () => {
   mockFetch(async () => jsonResponse(429, { code: 429, msg: 'too many' }, { 'retry-after': '10' }));
   const r = await kie.submit(imageReq, ctx());

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
   ensureDirs, getConfig, getKey, setKey, maskedKeyStatus, saveSettings, setOpenrouterOpenaiVerified,
-  getProjects, getArchivedProjects, addProject, reorderProjects, setProjectArchived, deleteProject,
+  getProjects, getArchivedProjects, addProject, reorderProjects, setProjectArchived, deleteProject, renameProject,
   getJobs, getJob, deleteJob, filesDir, dataDir,
   saveUpload, flushJobs, backfillPosters,
   getAssets, addAssetFromUpload, addAssetFromJob, addAssetFromUrl,
@@ -75,6 +75,10 @@ api.get('/projects', (_req, res) => res.json({ projects: getProjects(), archived
 api.post('/projects', (req, res) => res.json({ projects: addProject(req.body?.name) }));
 api.post('/projects/order', (req, res) => res.json({ projects: reorderProjects(req.body?.projects || []) }));
 api.post('/projects/archive', (req, res) => res.json(setProjectArchived(req.body?.name, !!req.body?.archived)));
+api.post('/projects/rename', (req, res) => {
+  try { res.json(renameProject(req.body?.from, req.body?.to)); }
+  catch (e) { res.status(400).json({ error: String(e.message || e) }); }
+});
 api.delete('/projects/:name', (req, res) => res.json(deleteProject(req.params.name)));
 
 // Assets — a per-project library of reusable, taggable files (user uploads +

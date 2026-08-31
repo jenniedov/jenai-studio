@@ -20,10 +20,11 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
 ## Setup (once per session)
 1. You don't need to start anything — the MCP launches the studio for you on your
    first tool call (the very first request may take ~15s while it boots).
-2. **Create a project named for what they're building** — `create_project({name})`
-   with a short descriptive name (e.g. "Autumn candle launch", "Cyberpunk cat set").
-   Use that exact name as `project` for **every** generation this session, so all
-   the output lands together.
+2. **Create a project named the way the person would say it** — `create_project({name})`,
+   short and natural, **in their language** (a Hebrew speaker gets "פאודה" or
+   "נרות סתיו", not "Night Protocol — Powder Thriller"). It's their folder label,
+   not a marketing title. Use that exact name as `project` for **every** generation
+   this session, so all the output lands together.
 
 ## The loop for any generation
 1. **Pick a model.** Call `list_models({type})` (image or video). Choose by the
@@ -70,3 +71,9 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
 - Show the person what you made (links/previews) and where to see it.
 - If a generation errors, read the returned message — it's usually actionable
   (wrong option value, out of credits, a provider setting) — and adjust or say so.
+- **If the connection drops mid-generation** (result says "lost contact", or the
+  tool call fails after you submitted): the job very likely **kept running and
+  finished** in the studio. NEVER regenerate blindly — that spends their money
+  twice. First check `get_job` with the job_id (it's in the result), or
+  `list_assets({project})` to see what actually landed; only regenerate what is
+  truly missing.

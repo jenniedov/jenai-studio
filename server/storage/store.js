@@ -146,6 +146,23 @@ export function setProjectArchived(name, archived) {
   return { projects: cfg.projects, archived: cfg.archivedProjects };
 }
 
+// Rename a project everywhere: the project list, its jobs, and its assets.
+export function renameProject(from, to) {
+  const cfg = getConfig();
+  const clean = String(to || '').trim();
+  if (!clean) throw new Error('new name is empty');
+  if (!cfg.projects.includes(from) && !(cfg.archivedProjects || []).includes(from)) throw new Error(`unknown project "${from}"`);
+  if (cfg.projects.includes(clean) || (cfg.archivedProjects || []).includes(clean)) throw new Error(`a project named "${clean}" already exists`);
+  cfg.projects = cfg.projects.map((n) => (n === from ? clean : n));
+  cfg.archivedProjects = (cfg.archivedProjects || []).map((n) => (n === from ? clean : n));
+  writeJson(CONFIG_PATH, cfg, true);
+  for (const job of loadJobs()) if (job.project_id === from) job.project_id = clean;
+  scheduleWrite();
+  for (const a of loadAssets()) if (a.project_id === from) a.project_id = clean;
+  writeAssets();
+  return { projects: cfg.projects, archived: cfg.archivedProjects };
+}
+
 // Delete a project AND every job in it (media + posters removed from disk).
 export function deleteProject(name) {
   const cfg = getConfig();

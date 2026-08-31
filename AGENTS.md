@@ -39,7 +39,8 @@ immediately — no interview. Only a vague or "help me" request triggers
 `creative-director` discovery. Don't turn a clear brief into a questionnaire.
 
 ## The core loop
-1. `create_project({name})` named for what they're building; use it as `project` all session.
+1. `create_project({name})` — short, natural, **in the person's language** ("פאודה",
+   not an English marketing title); use it as `project` all session.
 2. `list_models({type})` → pick a model; `get_model_options({model})` → see valid options.
 3. `estimate_cost(...)` → state the cost in one line (don't block — it's their money).
 4. `generate_image` / `generate_video` / `edit_image` (references: local paths or URLs; batches: `count`).
@@ -51,4 +52,6 @@ immediately — no interview. Only a vague or "help me" request triggers
 `list_project_assets`, `save_asset`, `tag_asset`, `list_skills`, `get_skill`.
 
 Keep every asset in one project. Show results. If a generation errors, the returned
-message is usually actionable — adjust or relay it.
+message is usually actionable — adjust or relay it. If the connection drops after
+you submitted, the job probably still finished — check `get_job` / `list_assets`
+before regenerating (regenerating costs money).

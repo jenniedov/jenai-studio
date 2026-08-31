@@ -50,7 +50,10 @@ async function api(path, opts) {
   await ensureStudio();
   let res;
   try { res = await fetch(`${API}${path}`, opts); }
-  catch { throw new Error(`Studio not reachable at ${BASE}.`); }
+  catch {
+    healthy = false; // re-check (and relaunch if needed) on the next call
+    throw new Error(`Studio not reachable at ${BASE}.`);
+  }
   const text = await res.text();
   let data; try { data = JSON.parse(text); } catch { data = text; }
   if (!res.ok) throw new Error(typeof data === 'object' ? (data.error || JSON.stringify(data)) : String(data));
@@ -64,13 +67,26 @@ function mimeOf(name) {
 }
 const abs = (u) => (u && u.startsWith('/api/') ? `${BASE}${u}` : u);
 
+// Poll a job to completion. Resilient to the studio restarting mid-poll: a
+// dropped connection doesn't abort the wait — the job keeps running (or is
+// already saved) server-side, so we keep retrying until the studio is back.
 async function waitJob(id, { timeoutMs = 300000, intervalMs = 2500 } = {}) {
   const start = Date.now();
+  let misses = 0;
+  let last = { job_id: id, status: 'queued' };
   for (;;) {
-    const job = await api(`/jobs/${id}`);
-    if (job.status === 'done' || job.status === 'error') return job;
-    if (Date.now() - start > timeoutMs) return { ...job, status: 'timeout' };
-    await new Promise((r) => setTimeout(r, intervalMs));
+    try {
+      last = await api(`/jobs/${id}`);
+      misses = 0;
+      if (last.status === 'done' || last.status === 'error') return last;
+    } catch {
+      // Studio unreachable (restart / crash). ensureStudio on the next call
+      // will relaunch it; give it up to ~12 tries before giving up on waiting.
+      misses += 1;
+      if (misses > 12) return { ...last, job_id: id, status: 'unknown' };
+    }
+    if (Date.now() - start > timeoutMs) return { ...last, job_id: id, status: 'timeout' };
+    await sleep(misses ? 5000 : intervalMs);
   }
 }
 
@@ -126,6 +142,8 @@ function resultContent(jobs, { inlineImages = true } = {}) {
       }
     } else if (j.status === 'error') {
       lines.push(`${num(i)}✗ ${j.model_label || j.model} · ${j.provider}: ${j.error?.friendly?.en?.body || j.error?.code || 'failed'}`);
+    } else if (j.status === 'unknown' || j.status === 'timeout') {
+      lines.push(`${num(i)}⚠ lost contact while waiting for job ${j.job_id} — it may well have FINISHED. Check get_job({job_id:"${j.job_id}"}) or list_assets before regenerating (regenerating costs money).`);
     } else {
       lines.push(`${num(i)}… ${j.model} still ${j.status}`);
     }
@@ -219,9 +237,15 @@ server.registerTool('list_projects', {
 
 server.registerTool('create_project', {
   title: 'Create project',
-  description: 'Create a project named for what the user is building (e.g. "Autumn candle launch"). Use its name as the `project` for every generation in this session, so all output lands in one place.',
+  description: 'Create a project named the way the PERSON would say it, in THEIR language — short and natural (e.g. "פאודה", "Autumn candles"), never an English marketing title for a non-English speaker. Use its name as the `project` for every generation in this session, so all output lands in one place.',
   inputSchema: { name: z.string() },
 }, async ({ name }) => { const r = await post('/projects', { name }); return text({ created: name, projects: r.projects }); });
+
+server.registerTool('rename_project', {
+  title: 'Rename project',
+  description: 'Rename a project everywhere (its jobs and assets follow). Use when the person wants a different name — e.g. to fix a name into their own language.',
+  inputSchema: { from: z.string(), to: z.string() },
+}, async ({ from, to }) => { const r = await post('/projects/rename', { from, to }); return text({ renamed: { from, to }, projects: r.projects }); });
 
 const genSchema = {
   project: z.string().describe('project name to save into (create_project first)'),

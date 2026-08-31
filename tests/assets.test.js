@@ -133,6 +133,24 @@ test('promote by URL copies a local /api/files reference', async () => {
   store.deleteAsset(a.asset_id); store.deleteJob('cand-url');
 });
 
+test('renaming a project carries its jobs and assets along', () => {
+  store.addProject('English Marketing Title');
+  fakeDoneJob('cand-rn');
+  const j = store.getJob('cand-rn'); j.project_id = 'English Marketing Title'; store.putJob(j);
+  const a = store.addAssetFromJob({ project: 'English Marketing Title', job_id: 'cand-rn', tags: ['x'] });
+
+  store.renameProject('English Marketing Title', 'פאודה');
+
+  assert.ok(store.getProjects().includes('פאודה'));
+  assert.ok(!store.getProjects().includes('English Marketing Title'));
+  assert.equal(store.getJobs('פאודה').jobs.some((x) => x.job_id === 'cand-rn'), true);
+  assert.equal(store.getAssets('פאודה').some((x) => x.asset_id === a.asset_id), true);
+  assert.equal(store.getAssets('English Marketing Title').length, 0);
+  // Name collisions are refused.
+  assert.throws(() => store.renameProject('פאודה', 'default'));
+  store.deleteProject('פאודה');
+});
+
 test('deleting a project purges its assets and their files', () => {
   const doomed = 'doomed-project';
   store.addProject(doomed);

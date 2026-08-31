@@ -23,6 +23,7 @@ export const api = {
   addProject: (name) => jsend('/projects', 'POST', { name }),
   reorderProjects: (projects) => jsend('/projects/order', 'POST', { projects }),
   archiveProject: (name, archived) => jsend('/projects/archive', 'POST', { name, archived }),
+  renameProject: (from, to) => jsend('/projects/rename', 'POST', { from, to }),
   deleteProject: (name) => jsend(`/projects/${encodeURIComponent(name)}`, 'DELETE'),
   setKey: (provider, key) => jsend('/keys', 'POST', { provider, key }),
   saveSettings: (patch) => jsend('/settings', 'POST', patch),
