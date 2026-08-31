@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "jenai-studio": {
+      "command": "node",
+      "args": ["server/mcp/index.js"],
+      "env": {}
+    }
+  }
+}
