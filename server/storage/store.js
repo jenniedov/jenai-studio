@@ -6,7 +6,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import {
   mkdirSync, readFileSync, writeFileSync, existsSync, chmodSync,
-  rmSync, createWriteStream,
+  rmSync, copyFileSync, createWriteStream,
 } from 'node:fs';
 import { Readable } from 'node:stream';
 import { randomUUID } from 'node:crypto';
@@ -16,6 +16,7 @@ const DATA_DIR = process.env.JENAI_DATA_DIR || join(homedir(), '.jenai-studio');
 const FILES_DIR = join(DATA_DIR, 'files');
 const CONFIG_PATH = join(DATA_DIR, 'config.json');
 const HISTORY_PATH = join(DATA_DIR, 'history.json');
+const ASSETS_PATH = join(DATA_DIR, 'assets.json');
 
 export function ensureDirs() {
   mkdirSync(FILES_DIR, { recursive: true });
@@ -166,6 +167,15 @@ export function deleteProject(name) {
   }
   jobsCache = keep;
   scheduleWrite();
+  // Purge this project's asset library (records + their files on disk).
+  const assets = loadAssets();
+  const keepAssets = [];
+  for (const a of assets) {
+    if (a.project_id === name) { try { rmSync(join(FILES_DIR, a.file_name), { force: true }); } catch { /* ignore */ } }
+    else keepAssets.push(a);
+  }
+  assetsCache = keepAssets;
+  writeAssets();
   return { projects: cfg.projects, archived: cfg.archivedProjects, removedJobs: removed };
 }
 
@@ -272,6 +282,149 @@ export async function backfillPosters() {
     if (poster) { out.poster_name = poster; out.poster_url = `/api/files/${poster}`; changed++; scheduleWrite(); }
   }
   return changed;
+}
+
+// ---------------------------------------------------------------------------
+// Assets — a per-project library of reusable files: images/videos the person
+// uploads, plus generations they (or the agent) promote. Each asset has tags so
+// an agent can find the right reference later and pass its URL as an input_image.
+// Asset files are COPIED into the files folder under an `asset_` name so their
+// lifecycle is independent of the job that produced them.
+// ---------------------------------------------------------------------------
+
+let assetsCache = null;
+function loadAssets() {
+  if (assetsCache) return assetsCache;
+  assetsCache = readJson(ASSETS_PATH, []);
+  return assetsCache;
+}
+function writeAssets() {
+  try { writeFileSync(ASSETS_PATH, JSON.stringify(assetsCache || [], null, 2)); } catch { /* best effort */ }
+}
+
+function normTags(tags) {
+  const arr = Array.isArray(tags) ? tags : (tags == null ? [] : String(tags).split(','));
+  return [...new Set(arr.map((t) => String(t).trim()).filter(Boolean))];
+}
+
+function typeOfName(name) {
+  const ext = (String(name).match(/\.[a-z0-9]+$/i)?.[0] || '').toLowerCase();
+  return ['.mp4', '.webm', '.mov'].includes(ext) ? 'video' : 'image';
+}
+
+// Write a base64 data URL to a new asset_ file. Returns { file_name, type }.
+function writeDataUrlAsset(dataUrl) {
+  const m = String(dataUrl).match(/^data:(image|video)\/([a-z0-9.+-]+);base64,(.*)$/i);
+  if (!m) throw new Error('expected a base64 data URL');
+  const kind = m[1].toLowerCase();
+  const sub = m[2].toLowerCase();
+  const ext = sub.includes('png') ? '.png' : sub.includes('webp') ? '.webp' : sub.includes('gif') ? '.gif'
+    : sub.includes('mp4') ? '.mp4' : sub.includes('webm') ? '.webm' : kind === 'video' ? '.mp4' : '.jpg';
+  const file_name = `asset_${randomUUID()}${ext}`;
+  writeFileSync(join(FILES_DIR, file_name), Buffer.from(m[3], 'base64'));
+  return { file_name, type: kind === 'video' ? 'video' : 'image' };
+}
+
+// Copy an existing files/ entry into a new asset_ file. Returns { file_name, type }.
+function copyToAsset(srcName) {
+  const ext = (String(srcName).match(/\.[a-z0-9]+$/i)?.[0] || '.png').toLowerCase();
+  const file_name = `asset_${randomUUID()}${ext}`;
+  copyFileSync(join(FILES_DIR, srcName), join(FILES_DIR, file_name));
+  return { file_name, type: typeOfName(file_name) };
+}
+
+function pushAsset(a) {
+  loadAssets().unshift(a);
+  writeAssets();
+  return a;
+}
+
+function baseAsset({ project, file_name, type, source, name, tags, prompt, from_job_id }) {
+  return {
+    asset_id: randomUUID(),
+    project_id: project || 'default',
+    file_name,
+    type,
+    source,                 // 'upload' | 'generated'
+    name: name || '',
+    tags: normTags(tags),
+    prompt: prompt || '',
+    from_job_id: from_job_id || null,
+    created_at: new Date().toISOString(),
+    local_url: `/api/files/${file_name}`,
+  };
+}
+
+// Newest-first, optionally scoped to one project ('all' or falsy → every project).
+export function getAssets(projectId) {
+  const list = loadAssets();
+  const arr = projectId && projectId !== 'all' ? list.filter((a) => a.project_id === projectId) : list.slice();
+  arr.sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0));
+  return arr;
+}
+
+export function addAssetFromUpload({ project, dataUrl, name, tags }) {
+  const { file_name, type } = writeDataUrlAsset(dataUrl);
+  return pushAsset(baseAsset({ project, file_name, type, source: 'upload', name, tags }));
+}
+
+export function addAssetFromJob({ project, job_id, name, tags }) {
+  const job = getJob(job_id);
+  if (!job) throw new Error(`unknown job ${job_id}`);
+  const out = job.outputs?.[0];
+  if (!out?.file_name) throw new Error('that job has no output file to save');
+  const { file_name, type } = copyToAsset(out.file_name);
+  return pushAsset(baseAsset({
+    project: project || job.project_id, file_name, type, source: 'generated',
+    name, tags, prompt: job.prompt, from_job_id: job_id,
+  }));
+}
+
+// Promote by URL: a local /api/files/<name> (copied) or a public http(s) URL
+// (downloaded first). Used by agents that have a result URL but not a job id.
+export async function addAssetFromUrl({ project, url, name, tags }) {
+  const local = String(url).match(/\/api\/files\/([^/?#]+)$/);
+  let file_name; let type;
+  if (local && existsSync(join(FILES_DIR, local[1]))) {
+    ({ file_name, type } = copyToAsset(local[1]));
+  } else if (/^https?:/i.test(url)) {
+    const guessed = typeOfName(url);
+    const dl = await downloadToFiles(url, guessed);
+    file_name = dl; type = typeOfName(dl);
+  } else {
+    throw new Error('url must be a /api/files link or a public http(s) URL');
+  }
+  return pushAsset(baseAsset({ project, file_name, type, source: 'generated', name, tags }));
+}
+
+export function updateAsset(id, patch = {}) {
+  const a = loadAssets().find((x) => x.asset_id === id);
+  if (!a) throw new Error('unknown asset');
+  if (patch.name != null) a.name = String(patch.name);
+  if (patch.tags != null) a.tags = normTags(patch.tags);
+  if (patch.project != null) a.project_id = String(patch.project);
+  writeAssets();
+  return a;
+}
+
+export function replaceAssetFile(id, dataUrl) {
+  const a = loadAssets().find((x) => x.asset_id === id);
+  if (!a) throw new Error('unknown asset');
+  const { file_name, type } = writeDataUrlAsset(dataUrl);
+  try { rmSync(join(FILES_DIR, a.file_name), { force: true }); } catch { /* ignore */ }
+  a.file_name = file_name; a.type = type; a.local_url = `/api/files/${file_name}`;
+  writeAssets();
+  return a;
+}
+
+export function deleteAsset(id) {
+  const list = loadAssets();
+  const a = list.find((x) => x.asset_id === id);
+  if (!a) return false;
+  try { rmSync(join(FILES_DIR, a.file_name), { force: true }); } catch { /* ignore */ }
+  assetsCache = list.filter((x) => x.asset_id !== id);
+  writeAssets();
+  return true;
 }
 
 // ---------------------------------------------------------------------------

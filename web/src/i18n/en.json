@@ -70,6 +70,22 @@
     "deleteConfirm": "Delete this and its file?",
     "delete": "Delete"
   },
+  "assets": {
+    "title": "Assets",
+    "upload": "Upload",
+    "empty": "No assets yet — upload references, or save a generation with ★. The agent can use and tag these too.",
+    "untitled": "Untitled",
+    "namePlaceholder": "Name (e.g. hero character)",
+    "tagsPlaceholder": "Tags, comma-separated (e.g. character, front-view)",
+    "save": "Save",
+    "replace": "Replace",
+    "download": "Download",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this asset and its file?",
+    "saveAsset": "Save as asset",
+    "saved": "Saved",
+    "src": { "upload": "uploaded", "generated": "generated" }
+  },
   "projects": {
     "title": "Projects",
     "subtitle": "One folder per idea — images and videos together.",

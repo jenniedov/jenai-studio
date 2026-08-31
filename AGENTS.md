@@ -24,6 +24,8 @@ The `skill/` folder holds task playbooks (also readable via the MCP `list_skills
 - **asking-the-user** — the recipe for asking good structured questions during
   discovery (single-select, one at a time, always an easy way out).
 - **studio** — the core generate loop (start here for any **concrete** brief).
+- **assets** — a project's reusable, tagged reference library (uploads + promoted
+  generations). List them, use an asset's URL as a reference, tag what you keep.
 - **choosing-an-image-model / choosing-a-video-model** — pick the model.
 - **edit-image** — restyle/modify an existing image.
 - **make-a-set** — a coherent set/series/storyboard.
@@ -46,7 +48,7 @@ immediately — no interview. Only a vague or "help me" request triggers
 ## Tools (jenai-studio MCP)
 `list_models`, `get_model_options`, `estimate_cost`, `list_projects`, `create_project`,
 `generate_image`, `generate_video`, `edit_image`, `get_job`, `list_assets`,
-`list_skills`, `get_skill`.
+`list_project_assets`, `save_asset`, `tag_asset`, `list_skills`, `get_skill`.
 
 Keep every asset in one project. Show results. If a generation errors, the returned
 message is usually actionable — adjust or relay it.

@@ -258,6 +258,36 @@ server.registerTool('list_assets', {
   return text({ assets: jobs.filter((j) => j.status === 'done').map((j) => ({ job_id: j.job_id, type: j.outputs?.[0]?.type, model: j.model, prompt: j.prompt, url: abs(j.outputs?.[0]?.local_url) })) });
 });
 
+server.registerTool('list_project_assets', {
+  title: 'List project assets',
+  description: 'List a project\'s ASSET LIBRARY — the reusable, tagged files (people\'s uploads + promoted generations). Read the tags to find the right reference, then pass its `url` in `input_images` on generate_image / generate_video / edit_image. This is different from list_assets (which lists everything you generated).',
+  inputSchema: { project: z.string() },
+}, async ({ project }) => {
+  const { assets } = await api(`/assets?project=${encodeURIComponent(project)}`);
+  return text({ assets: (assets || []).map((a) => ({ asset_id: a.asset_id, name: a.name, type: a.type, tags: a.tags, source: a.source, prompt: a.prompt, url: abs(a.local_url) })) });
+});
+
+server.registerTool('save_asset', {
+  title: 'Save as asset',
+  description: 'Promote something into a project\'s reusable asset library so you (or the person) can use it later as a reference. Pass a `job_id` from a generation you just made, or a result `url`. Always add descriptive `tags` (e.g. ["character","hero","front-view"]) and a short `name` so it can be found later.',
+  inputSchema: { project: z.string(), job_id: z.string().optional(), url: z.string().optional(), name: z.string().optional(), tags: z.array(z.string()).optional() },
+}, async ({ project, job_id, url, name, tags }) => {
+  const body = { project, name, tags };
+  if (job_id) body.job_id = job_id; else if (url) body.url = url;
+  else throw new Error('give a job_id or a url to save as an asset');
+  const { asset } = await post('/assets', body);
+  return text({ saved: { asset_id: asset.asset_id, name: asset.name, tags: asset.tags, url: abs(asset.local_url) } });
+});
+
+server.registerTool('tag_asset', {
+  title: 'Tag / rename asset',
+  description: 'Set the tags (and optionally the name) on an existing asset so it is easy to find later. Tags REPLACE the current tags — include the ones you want to keep. Get asset_ids from list_project_assets.',
+  inputSchema: { asset_id: z.string(), tags: z.array(z.string()).optional(), name: z.string().optional() },
+}, async ({ asset_id, tags, name }) => {
+  const { asset } = await api(`/assets/${asset_id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags, name }) });
+  return text({ asset: { asset_id: asset.asset_id, name: asset.name, tags: asset.tags } });
+});
+
 server.registerTool('list_skills', {
   title: 'List skills', description: 'List the studio skills available to you (how to edit an image, make a set, etc.). Read a skill with get_skill before doing that kind of task.', inputSchema: {},
 }, async () => text({ skills: readSkills().map(({ name, description, source }) => ({ name, description, source })) }));

@@ -55,6 +55,10 @@ live in the JenAI Studio browser tab. Be concrete, show results, keep it in one 
 ## References & editing
 - To use images as references (style, subject, character), pass `input_images`
   (local paths, `/api/files/...` URLs, or public URLs).
+- **Project assets:** each project has a reusable, tagged reference library
+  (`list_project_assets` / `save_asset` / `tag_asset`). Check it for existing
+  references, use an asset's `url` as an `input_image`, and promote+tag good
+  outputs for reuse. See the `assets` skill.
 - To restyle/modify one image, use the `edit-image` skill (`edit_image` tool).
 
 ## Sets & series

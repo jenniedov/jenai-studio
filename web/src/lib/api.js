@@ -49,4 +49,9 @@ export const api = {
   },
   job: (id) => jget(`/jobs/${id}`),
   deleteJob: (id) => jsend(`/jobs/${id}`, 'DELETE'),
+  assets: (project) => jget(`/assets${project && project !== 'all' ? `?project=${encodeURIComponent(project)}` : ''}`),
+  addAsset: (body) => jsend('/assets', 'POST', body),
+  updateAsset: (id, patch) => jsend(`/assets/${id}`, 'PATCH', patch),
+  replaceAsset: (id, dataUrl) => jsend(`/assets/${id}/replace`, 'POST', { dataUrl }),
+  deleteAsset: (id) => jsend(`/assets/${id}`, 'DELETE'),
 };

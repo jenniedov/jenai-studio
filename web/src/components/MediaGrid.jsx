@@ -8,7 +8,7 @@ const PAGE = 40; // items per page — keeps the DOM light at thousands of jobs
 // A scrollable, paginated media grid. Loads pages on scroll (never the whole
 // history), lazy-loads images, and shows video POSTERS — a real <video> is only
 // mounted on hover, so a project with thousands of clips stays responsive.
-export default function MediaGrid({ type, onOpen, onError }) {
+export default function MediaGrid({ type, onOpen, onError, onSaveAsset }) {
   const { t, currentProject, retryJob } = useStudio();
   const dialog = useDialog();
   const [jobs, setJobs] = useState([]);      // ordered newest-first
@@ -101,7 +101,7 @@ export default function MediaGrid({ type, onOpen, onError }) {
     <>
       <div className={`media-grid ${type || 'all'}`}>
         {jobs.map((job) => (
-          <MediaCard key={job.job_id} job={job} t={t} onOpen={onOpen} onError={onError} onDelete={remove} onRetry={retryJob} />
+          <MediaCard key={job.job_id} job={job} t={t} onOpen={onOpen} onError={onError} onDelete={remove} onRetry={retryJob} onSaveAsset={onSaveAsset} />
         ))}
       </div>
       <div ref={sentinelRef} style={{ height: 1 }} />
@@ -110,7 +110,8 @@ export default function MediaGrid({ type, onOpen, onError }) {
   );
 }
 
-function MediaCard({ job, t, onOpen, onError, onDelete, onRetry }) {
+function MediaCard({ job, t, onOpen, onError, onDelete, onRetry, onSaveAsset }) {
+  const [saved, setSaved] = useState(false);
   const [hover, setHover] = useState(false);
   const out = job.outputs?.[0];
   const isVideo = job.task === 'video';
@@ -170,6 +171,13 @@ function MediaCard({ job, t, onOpen, onError, onDelete, onRetry }) {
         <img className="thumb" src={out?.local_url} alt={job.prompt || ''} loading="lazy" />
       )}
       {isVideo && <span className="dur-badge">▶</span>}
+      {onSaveAsset && (
+        <button
+          className={`card-save ${saved ? 'done' : ''}`}
+          title={t('assets.saveAsset')}
+          onClick={(e) => { e.stopPropagation(); onSaveAsset(job); setSaved(true); setTimeout(() => setSaved(false), 1600); }}
+        >{saved ? `✓ ${t('assets.saved')}` : `★ ${t('assets.saveAsset')}`}</button>
+      )}
       <span className="tile-meta">{job.model_label || job.model}</span>
       {job.prompt && <div className="cap">{job.prompt}</div>}
       <div className="tile-bar">

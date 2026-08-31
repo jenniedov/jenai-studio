@@ -96,8 +96,12 @@ gate silently.
    or place, generate the **reference images** before any video: a clean character
    image, a location image, key props. Make a few candidates and let them pick.
    **Gate 2:** they choose the references — these become the visual source of truth.
-   A photo they supply counts as already approved. (Pass chosen images as
-   `input_images` on later generations.)
+   A photo they supply counts as already approved. **Save the approved references
+   into the project's asset library** with `save_asset` (tag them: `["character",
+   "hero"]`, `["location","night"]`) and reuse the *same* asset every time so
+   identity doesn't drift — see the `assets` skill. Check `list_project_assets`
+   first: the person may have already uploaded the references. Pass an asset's
+   `url` as `input_images` on later generations.
 3. **Lock the shot plan.** Split into shots/clips (usually a few short clips, not
    one long generation — more control, easier continuity). For each: first frame,
    camera, lighting, action beats, what stays consistent across the cut. **Gate 3:**

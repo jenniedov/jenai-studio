@@ -11,6 +11,8 @@ import {
   getProjects, getArchivedProjects, addProject, reorderProjects, setProjectArchived, deleteProject,
   getJobs, getJob, deleteJob, filesDir, dataDir,
   saveUpload, flushJobs, backfillPosters,
+  getAssets, addAssetFromUpload, addAssetFromJob, addAssetFromUrl,
+  updateAsset, replaceAssetFile, deleteAsset,
 } from './storage/store.js';
 import { listAdapters } from './adapters/index.js';
 import { probeOpenaiEligibility } from './adapters/openrouter.js';
@@ -74,6 +76,30 @@ api.post('/projects', (req, res) => res.json({ projects: addProject(req.body?.na
 api.post('/projects/order', (req, res) => res.json({ projects: reorderProjects(req.body?.projects || []) }));
 api.post('/projects/archive', (req, res) => res.json(setProjectArchived(req.body?.name, !!req.body?.archived)));
 api.delete('/projects/:name', (req, res) => res.json(deleteProject(req.params.name)));
+
+// Assets — a per-project library of reusable, taggable files (user uploads +
+// promoted generations). The same set the MCP exposes to any agent.
+api.get('/assets', (req, res) => res.json({ assets: getAssets(req.query.project) }));
+api.post('/assets', async (req, res) => {
+  try {
+    const b = req.body || {};
+    let asset;
+    if (b.dataUrl) asset = addAssetFromUpload(b);
+    else if (b.job_id) asset = addAssetFromJob(b);
+    else if (b.url) asset = await addAssetFromUrl(b);
+    else throw new Error('provide dataUrl (upload), job_id, or url');
+    res.json({ asset });
+  } catch (e) { res.status(400).json({ error: String(e.message || e) }); }
+});
+api.patch('/assets/:id', (req, res) => {
+  try { res.json({ asset: updateAsset(req.params.id, req.body || {}) }); }
+  catch (e) { res.status(400).json({ error: String(e.message || e) }); }
+});
+api.post('/assets/:id/replace', (req, res) => {
+  try { res.json({ asset: replaceAssetFile(req.params.id, req.body?.dataUrl || '') }); }
+  catch (e) { res.status(400).json({ error: String(e.message || e) }); }
+});
+api.delete('/assets/:id', (req, res) => res.json({ ok: deleteAsset(req.params.id) }));
 
 api.post('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
 
