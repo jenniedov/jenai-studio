@@ -315,6 +315,21 @@ a { color: inherit; }
 .skill-editor { display: flex; flex-direction: column; gap: 10px; }
 .skill-editor .skill-body { min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 @media (max-width: 760px) { .skills-view { grid-template-columns: 1fr; } }
+
+/* ---------- Agent onboarding ---------- */
+.agent-view { overflow: auto; height: 100%; padding: 24px 28px; }
+.agent-inner { max-width: 760px; margin: 0 auto; }
+.agent-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.agent-step { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 20px; margin-top: 16px; }
+.agent-step-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.agent-step-n { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--cta); color: var(--cta-ink); font-weight: 800; display: grid; place-items: center; font-size: 13px; }
+.agent-sub { color: var(--txt-soft); font-size: 12.5px; font-weight: 600; margin: 12px 0 6px; }
+.agent-code { position: relative; background: var(--bg-3); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.agent-code pre { margin: 0; padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.55; color: var(--txt); white-space: pre-wrap; word-break: break-word; }
+.agent-code.big pre { max-height: 320px; overflow: auto; }
+.agent-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-top: 1px solid var(--line); background: var(--bg-2); }
+.copy-mini { padding: 5px 12px; font-size: 12px; }
+.agent-foot { margin: 18px 2px; color: var(--txt-faint); font-size: 13px; }
 .gcard.wide { aspect-ratio: 16 / 9; }
 .thumb.video-fallback { display: grid; place-items: center; font-size: 28px; color: var(--txt-faint); }
 .dur-badge { position: absolute; top: 8px; inset-inline-end: 8px; background: rgba(23, 15, 19, .72); color: #fff; border-radius: var(--r-pill); padding: 2px 8px; font-size: 11px; z-index: 1; pointer-events: none; }

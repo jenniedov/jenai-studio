@@ -1,6 +1,23 @@
 {
   "app": { "tagline": "מייצרים תמונות וסרטונים על המחשב שלך" },
-  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "update": "עדכון", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "agent": "סוכן", "update": "עדכון", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "agent": {
+    "heading": "לחבר את הסוכן שלכם",
+    "subtitle": "נותנים לסוכן (Claude Code, Codex וכו') גישה לסטודיו\nואז פשוט מבקשים ממנו ליצור",
+    "step1": "מפעילים את הסטודיו",
+    "step1desc": "משאירים את האפליקציה רצה — הסוכן מייצר דרכה",
+    "step2": "מחברים את ה-MCP",
+    "step2desc": "פעם אחת, לפי הסוכן שלכם",
+    "step2claude": "Claude Code (מתוך תיקיית הפרויקט)",
+    "step2codex": "Codex — מוסיפים ל-~/.codex/config.toml",
+    "step2generic": "כל לקוח MCP אחר",
+    "step3": "נותנים לסוכן את זה",
+    "step3desc": "מדביקים את זה בסוכן ואז מתארים מה רוצים ליצור",
+    "toolsdesc": "אפשר לעיין בכל היכולות בלשונית \"יכולות\"",
+    "copy": "העתקה",
+    "copied": "הועתק",
+    "copyAll": "העתקת הכל"
+  },
   "update": {
     "available": "יש עדכון",
     "upToDate": "הכל מעודכן",

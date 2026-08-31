@@ -1,6 +1,23 @@
 {
   "app": { "tagline": "Make images and videos on your own machine" },
-  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "update": "Update", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "agent": "Agent", "update": "Update", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "agent": {
+    "heading": "Connect your coding agent",
+    "subtitle": "Give your agent (Claude Code, Codex, …) access to the studio, then just ask it to create.",
+    "step1": "Start the studio",
+    "step1desc": "Keep this app running — the agent generates through it.",
+    "step2": "Connect the MCP",
+    "step2desc": "Once, depending on your agent.",
+    "step2claude": "Claude Code (run in the repo folder)",
+    "step2codex": "Codex — add to ~/.codex/config.toml",
+    "step2generic": "Any other MCP client",
+    "step3": "Give your agent this",
+    "step3desc": "Paste it into your agent, then describe what you want to create.",
+    "toolsdesc": "Browse everything it can do in the \"Skills\" tab.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyAll": "Copy all"
+  },
   "update": {
     "available": "Update available",
     "upToDate": "Up to date",
