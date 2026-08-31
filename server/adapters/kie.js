@@ -37,8 +37,20 @@ const UPLOAD_BASE = 'https://kieai.redpandaai.co/api';
 
 const EXT_BY_MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 
+// A URL Kie's servers can never fetch (our own localhost). If the engine's
+// data-URL inlining was skipped for any reason, convert here — never let a
+// localhost URL reach Kie (it fails as "image_input file type not supported").
+const isLocal = (u) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(u || '');
+
 async function resolveRefs(req, ctx) {
-  const images = req.input_images || [];
+  let images = req.input_images || [];
+  if (images.some((i) => isLocal(i?.url))) {
+    const { localFileToDataUrl } = await import('../storage/store.js');
+    images = images.map((i) => (isLocal(i?.url) ? { ...i, url: localFileToDataUrl(i.url) } : i));
+    const stuck = images.find((i) => isLocal(i?.url));
+    if (stuck) return { error: ctx.makeError('BAD_REQUEST', { raw: `reference file not found locally: ${stuck.url}` }) };
+    req = { ...req, input_images: images };
+  }
   if (!images.some((i) => /^data:/i.test(i?.url || ''))) return { req };
   const resolved = [];
   for (const img of images) {
