@@ -95,13 +95,15 @@ gate silently.
 2. **Build consistency references first.** For anything with a recurring character
    or place, generate the **reference images** before any video: a clean character
    image, a location image, key props. Make a few candidates and let them pick.
-   **Gate 2:** they choose the references — these become the visual source of truth.
-   A photo they supply counts as already approved. **Save the approved references
-   into the project's asset library** with `save_asset` (tag them: `["character",
-   "hero"]`, `["location","night"]`) and reuse the *same* asset every time so
-   identity doesn't drift — see the `assets` skill. Check `list_project_assets`
-   first: the person may have already uploaded the references. Pass an asset's
-   `url` as `input_images` on later generations.
+   **Gate 2:** they choose the references — present the candidates **numbered**
+   (the results come back 1., 2., 3.) and let them answer with a number. Save the
+   pick with `save_asset` and a **`role:` tag** (`["character","role:hero"]`,
+   `["location","role:set"]`) — the role tag marks the ACTIVE reference, and every
+   later generation for that role uses that asset's `url` in `input_images` so
+   identity doesn't drift. If they later want a different sheet, move the role tag
+   to the new asset (full recipe in the `assets` skill). A photo they supply counts
+   as already approved. Check `list_project_assets` first: the person may have
+   already uploaded the references.
 3. **Lock the shot plan.** Split into shots/clips (usually a few short clips, not
    one long generation — more control, easier continuity). For each: first frame,
    camera, lighting, action beats, what stays consistent across the cut. **Gate 3:**

@@ -31,6 +31,42 @@ location, a product shot — save them once, reuse them everywhere.
    `generate_video` / `edit_image`. The url is the source of truth for identity —
    reuse the *same* asset every time so the character/location doesn't drift.
 
+## Candidates: presenting, picking, and swapping
+
+**Presenting candidates.** When you generate several options (character sheets,
+locations, styles), the results come back **numbered** (1., 2., 3. — the same
+order as the inline previews, with a matching `n` in the JSON block). Show them
+to the person with those numbers and ask which one they want. When they say "the
+second one," map that number to its `job_id`.
+
+**Locking the pick — the `role:` tag.** Promote the chosen candidate with
+`save_asset`, and give it a **`role:<name>` tag** that marks it as the ACTIVE
+reference for that role, e.g.:
+
+```
+save_asset({ project, job_id: <the picked one>,
+             name: "hero character sheet",
+             tags: ["character", "sheet", "role:hero"] })
+```
+
+Rule: **exactly one asset per project carries a given `role:` tag.** From then on,
+whenever that role appears in a generation, look up the asset with `role:hero` in
+`list_project_assets` and pass its `url` in `input_images`. That's what keeps the
+character consistent everywhere.
+
+**Swapping later ("use a different character sheet").** When the person wants to
+replace a role's reference:
+1. Get (or generate + let them pick) the new sheet, and `save_asset` it.
+2. Move the role tag: `tag_asset` **replaces** the tag list, so first read the old
+   asset's tags from `list_project_assets`, then re-tag the OLD asset without the
+   `role:` tag (keep its other tags — don't delete it, the person may want it
+   back), and tag the NEW asset with `role:hero`.
+3. Confirm in one line what's now active ("hero is now the red-jacket sheet").
+   Future generations automatically follow the tag.
+
+The unused candidates don't need saving — they stay in the project gallery anyway.
+Save only what won (or anything the person explicitly wants kept).
+
 ## Promote and tag what you make
 - When you generate something worth reusing (a locked character, an approved
   location, a good product shot), **`save_asset`** it right away — don't make the
