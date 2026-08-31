@@ -7,7 +7,7 @@ import { useStudio } from '../lib/studio.jsx';
 export default function AgentView() {
   const { t } = useStudio();
 
-  const CONNECT = 'npm run connect';
+  const CONNECT = 'npm run setup';
   const CLAUDE = 'claude mcp add jenai-studio -- node server/mcp/index.js';
   const CODEX = '[mcp_servers.jenai-studio]\ncommand = "node"\nargs = ["server/mcp/index.js"]';
   const GENERIC = 'command: node\nargs: ["server/mcp/index.js"]';
@@ -32,8 +32,8 @@ export default function AgentView() {
     '',
     'The agent starts the studio itself — you do NOT run any server.',
     '',
-    '1) Connect the MCP (once):',
-    `   ${CONNECT}      # wires Claude Code + Codex`,
+    '1) Set up once (installs deps + wires Claude Code + Codex):',
+    `   ${CONNECT}`,
     '   Claude Code also auto-detects it: just open `claude` in this repo and approve.',
     `   Manual — Claude Code:  ${CLAUDE}`,
     `   Manual — Codex (~/.codex/config.toml):\n${CODEX.split('\n').map((l) => `     ${l}`).join('\n')}`,

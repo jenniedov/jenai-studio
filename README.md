@@ -17,14 +17,19 @@ Claude, with a friendly-error system that keeps a room of 50 people unblocked.
 You need **Node 18+** and **Git**.
 
 ```bash
-git clone <REPO_URL> jenai-studio
+git clone https://github.com/jenniedov/jenai-studio.git
 cd jenai-studio
-npm install
-npm start
+npm run setup
 ```
 
-Then open **http://localhost:4317**. The onboarding popup asks for a provider
-and key — or skip it and look around.
+`npm run setup` installs everything **and** connects the `jenai-studio` MCP to your
+coding agents (Claude Code + Codex) — no manual MCP config. You don't need to start
+a server: your agent launches the studio itself on the first request (or run
+`npm start` to open it yourself at **http://localhost:4317**).
+
+Then just open your agent (Claude Code / Codex) in this folder and tell it what to
+create — it generates into a project you watch fill up live. The onboarding popup
+asks for a provider key, or grab a free one below.
 
 For hot-reload development instead:
 
