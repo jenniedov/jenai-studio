@@ -190,7 +190,8 @@
       ],
       "resolutionField": "size",
       "providers": {
-        "oxen": "bytedance-seedream-5-pro"
+        "oxen": "bytedance-seedream-5-pro",
+        "openrouter": "bytedance-seed/seedream-5-0-pro"
       }
     },
     {

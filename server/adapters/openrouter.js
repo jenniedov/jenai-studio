@@ -29,6 +29,13 @@ const HEADERS = (key) => ({
 // Images API doesn't understand those — it wants aspect_ratio + a real resolution
 // (1K/2K/…). Translate the keyword to an aspect ratio and drop the bogus
 // resolution so the request is valid.
+// Which OpenRouter image models condition on references via /chat/completions
+// (modalities). Gemini and the OpenAI GPT-image family do; everything else is
+// Images-only and takes its reference through the /images `image` field.
+function usesChatCompletions(slug) {
+  return /gemini/i.test(slug) || /^openai\/gpt/i.test(slug);
+}
+
 const SIZE_TO_RATIO = { square: '1:1', portrait: '2:3', landscape: '3:2' };
 function normSize(req) {
   let aspect = req.aspect_ratio;
@@ -47,14 +54,19 @@ export const openrouter = {
     if (req.task === 'video') return submitVideo(req, ctx);
     const urls = (req.input_images || []).map((i) => i.url).filter(Boolean);
 
-    // Reference→image goes through chat completions (the Images endpoint ignores
-    // the reference). Text→image stays on the Images endpoint for aspect fidelity.
-    if (urls.length) return submitWithReference(req, ctx, urls);
+    // Gemini / GPT-image condition on references through chat completions (the
+    // Images endpoint ignores them). Other image models (Seedream, …) are
+    // Images-only — chat completions rejects them ("no endpoints support
+    // image,text modalities") — so their references go in the Images `image` field.
+    if (urls.length && usesChatCompletions(ctx.providerSlug)) return submitWithReference(req, ctx, urls);
 
     const { aspect, resolution } = normSize(req);
     const payload = { model: ctx.providerSlug, prompt: req.prompt };
     if (aspect) payload.aspect_ratio = aspect;
     if (resolution) payload.resolution = resolution;
+    // References on the Images endpoint go in `input_references` (image_url parts).
+    // `image` is silently ignored — Seedream et al. only condition on identity here.
+    if (urls.length) payload.input_references = urls.map((u) => ({ type: 'image_url', image_url: { url: u } }));
     ctx.applyOptions?.(payload); // config-driven custom options mapped to openrouter
     // OpenAI image models route only when the account allows data sharing.
     if (/^openai\//.test(ctx.providerSlug)) payload.provider = { data_collection: 'allow' };
