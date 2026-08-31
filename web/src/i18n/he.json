@@ -1,6 +1,19 @@
 {
   "app": { "tagline": "מייצרים תמונות וסרטונים על המחשב שלך" },
-  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "skills": {
+    "subtitle": "מה הסוכן יודע לעשות\nאפשר גם להוסיף משלכם",
+    "new": "יכולת חדשה",
+    "mine": "שלי",
+    "builtin": "מובנה",
+    "namePh": "שם היכולת",
+    "descPh": "תיאור קצר מתי להשתמש",
+    "bodyPh": "ההוראות (Markdown)",
+    "pick": "בוחרים יכולת מהרשימה",
+    "edit": "עריכה",
+    "deleteTitle": "למחוק את היכולת",
+    "deleteBody": "למחוק את \"{name}\"?"
+  },
   "cinema": { "placeholder": "מתארים את השוט", "look": "לוק" },
   "studios": {
     "audio": { "title": "סטודיו אודיו", "desc": "מייצרים מוזיקה וקול מטקסט", "status": "רץ על Oxen — בקרוב" },

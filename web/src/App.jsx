@@ -6,6 +6,7 @@ import StudioView from './components/StudioView.jsx';
 import ProjectsView from './components/ProjectsView.jsx';
 import ProjectView from './components/ProjectView.jsx';
 import CinemaView from './components/CinemaView.jsx';
+import SkillsView from './components/SkillsView.jsx';
 import StudioPlaceholder from './components/StudioPlaceholder.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
@@ -59,6 +60,7 @@ function Shell() {
       {view === 'images' && <StudioView type="image" />}
       {view === 'videos' && <StudioView type="video" />}
       {view === 'cinema' && <CinemaView />}
+      {view === 'skills' && <SkillsView />}
       {PLACEHOLDER_TABS.includes(view) && <StudioPlaceholder tab={view} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
       {onboarding && <OnboardingWrap onClose={closeOnboarding} />}

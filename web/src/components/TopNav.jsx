@@ -9,7 +9,7 @@ export default function TopNav({ onOpenSettings }) {
     <nav className="nav">
       <div className="brand"><span className="dot" />{config.branding.logoText || config.branding.name}&nbsp;Studio</div>
       <div className="tabs">
-        {['projects', 'images', 'videos', 'cinema', 'lipsync', 'audio', 'clipping', 'vibemotion'].map((k) => (
+        {['projects', 'images', 'videos', 'cinema', 'lipsync', 'audio', 'clipping', 'vibemotion', 'skills'].map((k) => (
           <button key={k} className={`tab ${view === k ? 'active' : ''}`} onClick={() => setView(k)}>{t(`nav.${k}`)}</button>
         ))}
       </div>

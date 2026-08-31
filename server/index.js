@@ -16,6 +16,7 @@ import { listAdapters } from './adapters/index.js';
 import { probeOpenaiEligibility } from './adapters/openrouter.js';
 import { refreshFeed, priceTable, feedMeta } from './feed/prices.js';
 import { optionSchema } from './options.js';
+import { listSkills, getSkill, saveUserSkill, deleteUserSkill } from './skills.js';
 import {
   createJobs, processJob, estimateCost, publicJob, BATCH_CAP,
 } from './engine.js';
@@ -76,6 +77,12 @@ api.delete('/projects/:name', (req, res) => res.json(deleteProject(req.params.na
 api.post('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
 
 // Real per-provider prices from the jenai.house feed (cached, refreshed daily).
+// Skills — built-in (repo) + user (~/.jenai-studio/skills). Same set the MCP sees.
+api.get('/skills', (_req, res) => res.json({ skills: listSkills() }));
+api.get('/skills/:id', (req, res) => { const s = getSkill(req.params.id); if (!s) return res.status(404).json({ error: 'not found' }); res.json(s); });
+api.post('/skills', (req, res) => { try { res.json(saveUserSkill(req.body || {})); } catch (e) { res.status(400).json({ error: String(e.message || e) }); } });
+api.delete('/skills/:id', (req, res) => { try { res.json(deleteUserSkill(req.params.id)); } catch (e) { res.status(400).json({ error: String(e.message || e) }); } });
+
 api.get('/prices', (_req, res) => res.json({ ...feedMeta(), table: priceTable() }));
 api.post('/prices/refresh', async (_req, res) => {
   const r = await refreshFeed({ force: true });

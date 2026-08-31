@@ -1,6 +1,19 @@
 {
   "app": { "tagline": "Make images and videos on your own machine" },
-  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "skills": {
+    "subtitle": "What the agent can do — add your own too.",
+    "new": "New skill",
+    "mine": "Mine",
+    "builtin": "Built-in",
+    "namePh": "Skill name",
+    "descPh": "Short description of when to use it",
+    "bodyPh": "The instructions (Markdown)",
+    "pick": "Pick a skill from the list",
+    "edit": "Edit",
+    "deleteTitle": "Delete skill?",
+    "deleteBody": "Delete \"{name}\"?"
+  },
   "cinema": { "placeholder": "Describe the shot…", "look": "Look" },
   "studios": {
     "audio": { "title": "Audio Studio", "desc": "Generate music and voice from a prompt.", "status": "Powered by Oxen — coming next" },
