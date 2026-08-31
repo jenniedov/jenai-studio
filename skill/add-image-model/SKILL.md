@@ -25,9 +25,14 @@ in its live catalog and record the exact slug:
   `request_schema`. Use the schema to read the real option field names.
 - **Kie:** check api.kie.ai docs / model list. Image slugs are usually bare
   (`nano-banana-pro`); some families use a separate endpoint (Veo) — see `kie.js`.
-- **OpenRouter:** `curl https://openrouter.ai/api/v1/models` and filter to
-  `architecture.output_modalities` containing `image`. It serves Google
-  `gemini-*-image` and OpenAI `gpt-*-image` families.
+- **OpenRouter:** `curl https://openrouter.ai/api/v1/models` lists **image**
+  models (filter `architecture.output_modalities` for `image`) — Google
+  `gemini-*-image`, OpenAI `gpt-*-image`, ByteDance `seedream-*`, and more.
+  ⚠️ **Video models are HIDDEN from that list.** To find/confirm a video (or any)
+  model, probe its endpoint directly:
+  `curl .../api/v1/models/<slug>/endpoints` → `data.architecture.output_modalities`.
+  OpenRouter has Seedance, Veo, Sora, Wan, Kling (`kwaivgi/…`), Flux video, etc.
+  See "## OpenRouter contract" below before wiring an OpenRouter slug.
 - Any provider added later: use its docs. If a provider doesn't offer the model,
   leave it out — cover every provider that genuinely does.
 
@@ -82,3 +87,48 @@ the Cinema studio automatically.
 
 Report: the model key, providers wired, options captured, and the verification
 result.
+
+## OpenRouter contract (hard-won specifics — read before wiring an OpenRouter slug)
+
+The OpenRouter adapter (`server/adapters/openrouter.js`) already implements all of
+this; you rarely touch code, just add the slug. But know how it behaves:
+
+- **Two image endpoints, picked by model family:**
+  - **Text→image:** `POST /api/v1/images { model, prompt, aspect_ratio?, resolution? }`
+    → `{ data: [{ b64_json, media_type }] }`. Honors aspect_ratio/resolution.
+  - **Reference→image:** Gemini & GPT-image condition on the reference via
+    `POST /api/v1/chat/completions` with `modalities:["image","text"]` and the
+    image as an `image_url` content part. **All other image models (Seedream, …)
+    are Images-only** — chat completions rejects them ("no endpoints support
+    image,text modalities") — so their reference goes on `/images` in
+    **`input_references: [{ type:"image_url", image_url:{ url } }]`**.
+    ⚠️ The `/images` `image` field is **silently ignored** — it invents a new
+    person. Identity only holds via `input_references` (or the chat path). Data
+    URLs are accepted.
+  - Routing lives in `usesChatCompletions(slug)` (`/gemini/` or `/^openai\/gpt/`).
+
+- **Size keywords:** models whose `resolutions` are OpenAI size words
+  (`auto/square/portrait/landscape`, `resolutionField:"size"`) don't work on
+  OpenRouter's `resolution` field. The adapter maps `square→1:1, portrait→2:3,
+  landscape→3:2` and drops `auto` (`normSize`). Just set the model's real values.
+
+- **Video:** `POST /api/v1/videos { model, prompt, duration?, resolution?,
+  aspect_ratio?, frame_images:[{type:"image_url",image_url:{url},frame_type:"first_frame"}]?,
+  input_references:[…]? }` → `{ id, polling_url, status }`. **Async:** poll
+  `GET /api/v1/videos/{id}` until `status:"completed"`, then download
+  `unsigned_urls[0]` — that content URL needs the `Authorization: Bearer` header
+  (the adapter passes it via `outputs[].headers`).
+
+- **Data-policy / ZDR gate (404 "No endpoints available … data policy"):** NOT a
+  bug and NOT a request-field problem. The user's OpenRouter account privacy
+  (openrouter.ai/settings/privacy) blocks the provider — commonly the **Non-frontier
+  Zero Data Retention** toggle (blocks Seedance/Seedream/etc.) or a per-provider
+  Data-Training toggle set to disabled. Tell the user to allow the provider there;
+  the friendly error already says so. OpenAI-on-OpenRouter is auto-verified at
+  startup (`probeOpenaiEligibility`) — video/ByteDance is not, so it needs the
+  manual account toggle.
+
+- **Real-person filter (ByteDance):** Seedance/Seedream **hard-block input images
+  of a real identifiable person** (`InputImageSensitiveContentDetected`). Rewording
+  won't help — it's the image. Workaround: render the person as a **character
+  sheet / character asset** first (see the `character-sheet` skill) and use THAT.
