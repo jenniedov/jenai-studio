@@ -151,6 +151,28 @@ test('renaming a project carries its jobs and assets along', () => {
   store.deleteProject('פאודה');
 });
 
+test('oxen with a local reference and no Kie key fails clearly, not "model busy"', async () => {
+  // The temp data dir has no keys, so there's nothing to host the reference on.
+  const { oxen } = await import('../server/adapters/oxen.js');
+  const { makeError, codeFromMessage } = await import('../server/errors/map.js');
+  const ctx = {
+    providerSlug: 'google-nano-banana-pro',
+    model: { type: 'image', label: 'Nano Banana Pro', resolutions: ['1K'], aspectRatios: ['9:16'] },
+    key: 'oxen-key',
+    makeError: (c, e = {}) => makeError(c, { provider: 'Oxen.ai', ...e }),
+    sniff: codeFromMessage,
+  };
+  const req = {
+    task: 'image', mode: 'reference_to_x', model: 'nano-banana-pro', prompt: 'x',
+    aspect_ratio: '9:16', num_outputs: 1,
+    input_images: [{ role: 'reference', url: DATA_URL }],
+  };
+  const r = await oxen.submit(req, ctx);
+  assert.ok(r.error, 'returns an error');
+  assert.equal(r.error.code, 'BAD_REQUEST'); // NOT PROVIDER_DOWN ("model busy")
+  assert.match(JSON.stringify(r.error.raw || ''), /Kie|reference|reachable/i);
+});
+
 test('deleting a project purges its assets and their files', () => {
   const doomed = 'doomed-project';
   store.addProject(doomed);

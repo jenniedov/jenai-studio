@@ -12,7 +12,42 @@
 // Model slugs are Oxen's OWN ids (see config/models.json), not the vendor names.
 // The live catalog `GET /api/ai/models` (no auth) is the source of truth.
 
+import { getKey, localFileToDataUrl } from '../storage/store.js';
+import { uploadDataUrlToKie, isLocalUrl, isDataUrl } from './upload.js';
+
 const BASE = 'https://hub.oxen.ai/api/ai';
+
+// Oxen FETCHES reference URLs server-side, so it can't read a data: URL or our
+// localhost files (both fail as a 500 "Internal Server Error"). Re-host any such
+// reference on a public URL (via Kie's file API) first. Returns { urls } or a
+// clean { error } — never lets an unreachable reference reach Oxen.
+async function resolvePublicRefs(req, ctx) {
+  const images = req.input_images || [];
+  const urls = [];
+  for (let i = 0; i < images.length; i++) {
+    let u = images[i]?.url;
+    if (!u) continue;
+    if (isLocalUrl(u)) u = localFileToDataUrl(u); // localhost file -> data URL
+    if (isDataUrl(u)) {
+      const kieKey = getKey('kie');
+      if (!kieKey) {
+        return { error: ctx.makeError('BAD_REQUEST', {
+          raw: 'Oxen needs a publicly reachable reference image. Add a Kie.ai key (Keys tab) so local references can be hosted for Oxen, or use provider "openrouter" or "kie" for reference/identity edits.',
+        }) };
+      }
+      try {
+        u = await uploadDataUrlToKie(u, kieKey, i);
+      } catch (e) {
+        const auth = e.status === 401 || e.status === 403;
+        return { error: ctx.makeError(auth ? 'AUTH_INVALID' : 'PROVIDER_DOWN', {
+          raw: `couldn't host the reference for Oxen via Kie (${e.message}). Check your Kie.ai key, or use provider "openrouter"/"kie".`,
+        }) };
+      }
+    }
+    urls.push(u);
+  }
+  return { urls };
+}
 
 export const oxen = {
   id: 'oxen',
@@ -22,7 +57,9 @@ export const oxen = {
   async submit(req, ctx) {
     const endpoint = req.task === 'video' ? 'videos/generate' : 'images/generate';
     const model = ctx.model;
-    const urls = (req.input_images || []).map((i) => i.url).filter(Boolean);
+    const resolved = await resolvePublicRefs(req, ctx);
+    if (resolved.error) return { error: resolved.error };
+    const urls = resolved.urls;
     // Each model names its options differently (resolution / size / image_size /
     // seconds) and only some accept aspect_ratio or generate_audio. models.json
     // carries per-model `resolutionField`, `durationField`, and `audio`, so we

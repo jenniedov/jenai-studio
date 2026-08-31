@@ -33,9 +33,7 @@ function refUrls(req) {
 // The engine inlines local files as data: URLs, so re-host those on Kie's own
 // File Upload API (same Bearer key, files kept ~3 days) and use the returned
 // public fileUrl instead.
-const UPLOAD_BASE = 'https://kieai.redpandaai.co/api';
-
-const EXT_BY_MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+import { uploadDataUrlToKie } from './upload.js';
 
 // A URL Kie's servers can never fetch (our own localhost). If the engine's
 // data-URL inlining was skipped for any reason, convert here — never let a
@@ -55,22 +53,12 @@ async function resolveRefs(req, ctx) {
   const resolved = [];
   for (const img of images) {
     if (!/^data:/i.test(img?.url || '')) { resolved.push(img); continue; }
-    const mime = img.url.slice(5, img.url.indexOf(';'));
-    const fileName = `ref-${Date.now()}-${resolved.length}.${EXT_BY_MIME[mime] || 'png'}`;
-    let res;
     try {
-      res = await fetch(`${UPLOAD_BASE}/file-base64-upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${ctx.key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64Data: img.url, uploadPath: 'jenai-refs', fileName }),
-      });
+      const url = await uploadDataUrlToKie(img.url, ctx.key, resolved.length);
+      resolved.push({ ...img, url });
     } catch (e) {
-      return { error: ctx.makeError('PROVIDER_DOWN', { raw: String(e) }) };
+      return { error: mapKieError(e.status || 500, e.body || { msg: e.message }, null, ctx) };
     }
-    const body = await safeJson(res);
-    const url = body?.data?.fileUrl || body?.data?.downloadUrl;
-    if (!res.ok || !url) return { error: mapKieError(res.status, body, res.headers, ctx) };
-    resolved.push({ ...img, url });
   }
   return { req: { ...req, input_images: resolved } };
 }
