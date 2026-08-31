@@ -10,6 +10,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,11 +23,34 @@ const FILES_DIR = join(DATA_DIR, 'files');
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const log = (...a) => process.stderr.write(`[jenai-mcp] ${a.join(' ')}\n`);
 
+// ---- studio auto-start -----------------------------------------------------
+// The agent shouldn't have to start the studio — if it isn't running, we launch
+// it (detached, so it outlives this session and the person can watch results in
+// the browser) and wait for it to be healthy. First call may take ~15s to boot.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let healthy = false;
+let starting = null;
+async function healthOk() { try { return (await fetch(`${API}/health`)).ok; } catch { return false; } }
+async function ensureStudio() {
+  if (healthy) return;
+  if (await healthOk()) { healthy = true; return; }
+  if (!starting) starting = (async () => {
+    log('studio not running — starting it (npm start)…');
+    try { spawn('npm', ['start'], { cwd: REPO, detached: true, stdio: 'ignore', env: process.env }).unref(); }
+    catch (e) { starting = null; throw new Error(`could not start the studio: ${e.message}`); }
+    for (let i = 0; i < 120; i++) { if (await healthOk()) { healthy = true; log('studio is up'); return; } await sleep(1000); }
+    starting = null;
+    throw new Error('started the studio but it did not become healthy in time.');
+  })();
+  return starting;
+}
+
 // ---- HTTP helpers ----------------------------------------------------------
 async function api(path, opts) {
+  await ensureStudio();
   let res;
   try { res = await fetch(`${API}${path}`, opts); }
-  catch { throw new Error(`Studio not reachable at ${BASE} — start it with \`npm start\`.`); }
+  catch { throw new Error(`Studio not reachable at ${BASE}.`); }
   const text = await res.text();
   let data; try { data = JSON.parse(text); } catch { data = text; }
   if (!res.ok) throw new Error(typeof data === 'object' ? (data.error || JSON.stringify(data)) : String(data));

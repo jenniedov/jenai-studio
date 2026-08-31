@@ -10,8 +10,8 @@ Everything you make goes into a **project** (a named folder) they watch populate
 live in the JenAI Studio browser tab. Be concrete, show results, keep it in one project.
 
 ## Setup (once per session)
-1. The studio app must be running (`npm start`, http://localhost:4317). If a tool
-   says it's not reachable, tell the person to start it.
+1. You don't need to start anything — the MCP launches the studio for you on your
+   first tool call (the very first request may take ~15s while it boots).
 2. **Create a project named for what they're building** — `create_project({name})`
    with a short descriptive name (e.g. "Autumn candle launch", "Cyberpunk cat set").
    Use that exact name as `project` for **every** generation this session, so all

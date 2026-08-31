@@ -6,9 +6,12 @@ server** (the studio's tools); the person watches results appear in the JenAI
 Studio browser tab, grouped into a project.
 
 ## Prerequisites
-- The studio app must be running: `npm start` → http://localhost:4317.
-- The MCP server is configured in `.mcp.json` (`node server/mcp/index.js`). If your
-  agent doesn't auto-load it, register it: `command: node`, `args: [server/mcp/index.js]`.
+- You do NOT need to start the studio — the MCP launches it on your first request
+  (the first call may take ~15s to boot). Results appear in the browser at
+  http://localhost:4317.
+- The MCP server is configured in `.mcp.json` (`node server/mcp/index.js`); Claude
+  Code auto-detects it in this repo. For other agents, `npm run connect` wires it,
+  or register it manually: `command: node`, `args: [server/mcp/index.js]`.
 
 ## Skills = your playbooks
 The `skill/` folder holds task playbooks (also readable via the MCP `list_skills` /

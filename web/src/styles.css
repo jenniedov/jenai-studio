@@ -330,6 +330,8 @@ a { color: inherit; }
 .agent-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-top: 1px solid var(--line); background: var(--bg-2); }
 .copy-mini { padding: 5px 12px; font-size: 12px; }
 .agent-foot { margin: 18px 2px; color: var(--txt-faint); font-size: 13px; }
+.agent-note { margin: 14px 0 4px; padding: 12px 16px; border-radius: var(--r); background: rgba(246, 179, 0, .12); border: 1px solid var(--gold); color: var(--txt); font-weight: 600; font-size: 13.5px; }
+.agent-mini { color: var(--txt-faint); font-size: 12px; font-weight: 600; margin: 10px 0 5px; }
 .gcard.wide { aspect-ratio: 16 / 9; }
 .thumb.video-fallback { display: grid; place-items: center; font-size: 28px; color: var(--txt-faint); }
 .dur-badge { position: absolute; top: 8px; inset-inline-end: 8px; background: rgba(23, 15, 19, .72); color: #fff; border-radius: var(--r-pill); padding: 2px 8px; font-size: 11px; z-index: 1; pointer-events: none; }
