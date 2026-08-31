@@ -27,6 +27,7 @@ export function codeFromMessage(message = '') {
   if (/insufficient|no credit|out of credit|balance|not enough/.test(m)) return CODES.INSUFFICIENT_CREDITS;
   if (/rate limit|too many|slow down/.test(m)) return CODES.RATE_LIMITED;
   if (/unauthor|invalid.*key|api key|forbidden/.test(m)) return CODES.AUTH_INVALID;
+  if (/real person|inputimagesensitive|privacyinformation|sensitivecontent/.test(m)) return CODES.PERSON_IMAGE_BLOCKED;
   if (/moderat|content policy|safety|nsfw|blocked|flagged/.test(m)) return CODES.MODERATION_BLOCKED;
   if (/timeout|timed out/.test(m)) return CODES.TIMEOUT;
   if (/unavailable|overloaded|try again later|busy/.test(m)) return CODES.PROVIDER_DOWN;

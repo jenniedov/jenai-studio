@@ -52,5 +52,11 @@
     "body": "Something unexpected happened with {provider}.",
     "action": "What do I do now?",
     "claudePrompt": "A generation in JenAI Studio on {provider} with model {model} failed with an error I don't understand. Here are the technical details — help me figure out what to do."
+  },
+  "PERSON_IMAGE_BLOCKED": {
+    "title": "Blocked — real person in the image",
+    "body": "{provider} blocked this because the reference image looks like a real person (a privacy/likeness filter). Rewording the prompt won't help — the block is on the image itself. Try a different model or provider, or use a stylized / character-sheet version of the person instead of a real photo.",
+    "action": "What do I do now?",
+    "claudePrompt": "A generation in JenAI Studio on {provider} was blocked because the reference image may contain a real person. Rewording won't help. Help me either switch to a model/provider that allows real-person references, or turn the person into a usable stylized character reference."
   }
 }

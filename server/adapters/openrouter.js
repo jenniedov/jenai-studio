@@ -191,7 +191,8 @@ function mapOpenrouterError(status, body, ctx) {
     return e;
   }
   let code;
-  if (/moderat|content|safety|flagged|recitation|copyright/i.test(et + msg)) code = 'MODERATION_BLOCKED';
+  if (/real person|inputimagesensitive|privacyinformation|sensitivecontent/i.test(et + msg)) code = 'PERSON_IMAGE_BLOCKED';
+  else if (/moderat|content|safety|flagged|recitation|copyright/i.test(et + msg)) code = 'MODERATION_BLOCKED';
   else if (status === 401 || status === 403) code = 'AUTH_INVALID';
   else if (status === 402 || /credit|insufficient|balance/i.test(msg)) code = 'INSUFFICIENT_CREDITS';
   else if (status === 429) code = 'RATE_LIMITED';

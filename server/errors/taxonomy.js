@@ -8,6 +8,7 @@ export const CODES = {
   RATE_LIMITED: 'RATE_LIMITED', // too many requests (429)
   BAD_REQUEST: 'BAD_REQUEST', // bad params / unsupported model (400/422)
   MODERATION_BLOCKED: 'MODERATION_BLOCKED', // content filtered
+  PERSON_IMAGE_BLOCKED: 'PERSON_IMAGE_BLOCKED', // reference image blocked as a real person
   PROVIDER_DOWN: 'PROVIDER_DOWN', // upstream 5xx / model unavailable
   TIMEOUT: 'TIMEOUT', // took too long
   UNKNOWN: 'UNKNOWN', // anything unmapped
