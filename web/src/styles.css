@@ -540,3 +540,8 @@ a.btn.copy-mini { text-decoration: none; display: inline-flex; align-items: cent
 .agent-advanced > summary::before { content: "▸"; display: inline-block; margin-inline-end: 6px; transition: transform .12s; }
 .agent-advanced[open] > summary::before { transform: rotate(90deg); }
 .agent-advanced .agent-mini:first-of-type { margin-top: 10px; }
+
+/* Agent tab: two-step layout */
+.agent-step2 { margin-top: 20px; }
+.agent-step2-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.agent-step2-head strong { font-size: 14.5px; }

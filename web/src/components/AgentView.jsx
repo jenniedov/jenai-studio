@@ -1,34 +1,41 @@
 import React, { useState } from 'react';
 import { useStudio } from '../lib/studio.jsx';
 
-// The Agent tab, kept dead simple: one instruction, one thing to paste, one big
-// copy button. The paste is self-contained — it tells the agent to set the MCP
-// up itself (npm run setup wires Claude Code, Codex and Antigravity) and then be
-// the person's creative partner — so students never touch NPM/MCP config. The
-// per-agent manual config lives in an "advanced" disclosure, out of the way.
+// The Agent tab: TWO paste blocks.
+// Step 1 — one-time setup: paste into a Claude Code / Codex / Antigravity session;
+//          the agent installs + wires the MCP and says when it's done.
+// Step 2 — the everyday prompt: paste into EVERY new session to start creating.
+// Manual per-agent config stays tucked in an "advanced" disclosure.
 export default function AgentView() {
   const { t } = useStudio();
 
-  // The one block a student pastes into a fresh Claude Code / Codex / Antigravity
-  // session. Self-contained: set up, then act as the creative partner.
-  const PROMPT = [
-    'Set up the JenAI Studio agent, then help me create.',
+  const SETUP = [
+    'Set up JenAI Studio for me (one-time setup).',
     '',
-    "Setup (do this first, once): in the jenai-studio folder run  npm run setup",
-    '— it installs everything and connects the "jenai-studio" tools to Claude Code,',
-    'Codex, and Antigravity. Then reconnect this session so the tools load. You do',
-    'NOT run any server — the studio launches itself on your first tool call.',
+    'In the jenai-studio folder, run:  npm run setup',
+    'It installs the dependencies and connects the "jenai-studio" MCP tools to',
+    'Claude Code, Codex, and Antigravity. If anything fails, fix it and re-run.',
+    'Do NOT start any server — the studio launches itself later, on demand.',
     '',
-    'Then be my creative production partner (not just a tool caller):',
+    'When it finishes successfully, tell me clearly:',
+    '"Setup is done ✅ — open a NEW session and paste the second prompt from the',
+    'Agent tab to start creating."',
+  ].join('\n');
+
+  const SESSION = [
+    'You have the "jenai-studio" MCP tools. Be my creative production partner —',
+    'help me get to a finished image or video, not just call tools.',
+    '',
     '- Read the `creative-director` skill first (get_skill) — it tells you how to',
     '  read my intent and how much to ask.',
     '- If I ask for something concrete ("three images of a cat"), just make it.',
     '- If I am vague ("a video but no idea what"), ask me ONE simple question at a',
     '  time, propose a concept, then produce it — pausing for my okay.',
-    '- Put everything in a project I can watch in the JenAI Studio browser tab, and',
-    '  show me the result links.',
+    '- Put everything in a project I can watch in the JenAI Studio browser tab,',
+    '  and show me the result links.',
+    '- You do NOT need to start the studio — it launches on your first tool call.',
     '',
-    'When you are set up, ask me what I want to create.',
+    'Now ask me what I want to create.',
   ].join('\n');
 
   // Advanced: manual per-agent wiring, for anyone who would rather not run setup.
@@ -42,11 +49,37 @@ export default function AgentView() {
         <h1 className="page-title">{t('agent.heading')}</h1>
         <p className="agent-instruction">{t('agent.subtitle')}</p>
 
-        <div className="agent-code big hero">
-          <pre dir="ltr">{PROMPT}</pre>
-          <div className="agent-code-bar">
-            <span className="agent-code-hint">{t('agent.pasteHint')}</span>
-            <CopyButton text={PROMPT} t={t} label={t('agent.copyPrompt')} primary big />
+        <div className="agent-step2">
+          <div className="agent-step2-head">
+            <span className="agent-step-n">1</span>
+            <div>
+              <strong>{t('agent.setupTitle')}</strong>
+              <div className="projects-sub">{t('agent.setupDesc')}</div>
+            </div>
+          </div>
+          <div className="agent-code big hero">
+            <pre dir="ltr">{SETUP}</pre>
+            <div className="agent-code-bar">
+              <span className="agent-code-hint">{t('agent.pasteHint')}</span>
+              <CopyButton text={SETUP} t={t} label={t('agent.copySetup')} primary big />
+            </div>
+          </div>
+        </div>
+
+        <div className="agent-step2">
+          <div className="agent-step2-head">
+            <span className="agent-step-n">2</span>
+            <div>
+              <strong>{t('agent.sessionTitle')}</strong>
+              <div className="projects-sub">{t('agent.sessionDesc')}</div>
+            </div>
+          </div>
+          <div className="agent-code big hero">
+            <pre dir="ltr">{SESSION}</pre>
+            <div className="agent-code-bar">
+              <span className="agent-code-hint">{t('agent.pasteHint')}</span>
+              <CopyButton text={SESSION} t={t} label={t('agent.copySession')} primary big />
+            </div>
           </div>
         </div>
 
