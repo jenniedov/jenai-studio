@@ -80,6 +80,25 @@ export function maskedKeyStatus() {
   return status;
 }
 
+// Providers the user has switched off. A disabled provider is never offered in
+// the UI, never chosen by the MCP, and refused by /generate.
+export function getDisabledProviders() {
+  return getConfig().disabledProviders || [];
+}
+
+export function setProviderDisabled(id, disabled) {
+  const cfg = getConfig();
+  const set = new Set(cfg.disabledProviders || []);
+  if (disabled) set.add(id); else set.delete(id);
+  cfg.disabledProviders = [...set];
+  writeJson(CONFIG_PATH, cfg, true);
+  return cfg.disabledProviders;
+}
+
+export function isProviderEnabled(id) {
+  return !(getConfig().disabledProviders || []).includes(id);
+}
+
 export function saveSettings(patch) {
   const cfg = getConfig();
   cfg.settings = { ...cfg.settings, ...patch };

@@ -26,6 +26,7 @@ export const api = {
   renameProject: (from, to) => jsend('/projects/rename', 'POST', { from, to }),
   deleteProject: (name) => jsend(`/projects/${encodeURIComponent(name)}`, 'DELETE'),
   setKey: (provider, key) => jsend('/keys', 'POST', { provider, key }),
+  disableProvider: (provider, disabled) => jsend('/providers/disable', 'POST', { provider, disabled }),
   saveSettings: (patch) => jsend('/settings', 'POST', patch),
   verifyOpenrouter: () => jsend('/providers/openrouter/verify', 'POST'),
   prices: () => jget('/prices'),

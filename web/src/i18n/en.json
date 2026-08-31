@@ -1,6 +1,23 @@
 {
-  "app": { "tagline": "Make images and videos on your own machine" },
-  "nav": { "projects": "Projects", "images": "Images", "videos": "Videos", "cinema": "Cinema", "lipsync": "Lip Sync", "audio": "Audio", "clipping": "Clipping", "vibemotion": "Vibe Motion", "skills": "Skills", "agent": "Agent", "update": "Update", "theme": "Theme", "settings": "Settings", "keys": "Keys" },
+  "app": {
+    "tagline": "Make images and videos on your own machine"
+  },
+  "nav": {
+    "projects": "Projects",
+    "images": "Images",
+    "videos": "Videos",
+    "cinema": "Cinema",
+    "lipsync": "Lip Sync",
+    "audio": "Audio",
+    "clipping": "Clipping",
+    "vibemotion": "Vibe Motion",
+    "skills": "Skills",
+    "agent": "Agent",
+    "update": "Update",
+    "theme": "Theme",
+    "settings": "Settings",
+    "keys": "Keys"
+  },
   "agent": {
     "heading": "Connect your coding agent",
     "subtitle": "Two prompts: the first sets everything up (once), the second starts every new creating session.",
@@ -51,13 +68,36 @@
     "deleteTitle": "Delete skill?",
     "deleteBody": "Delete \"{name}\"?"
   },
-  "cinema": { "placeholder": "Describe the shot…", "look": "Look" },
+  "cinema": {
+    "placeholder": "Describe the shot…",
+    "look": "Look"
+  },
   "studios": {
-    "audio": { "title": "Audio Studio", "desc": "Generate music and voice from a prompt.", "status": "Powered by Oxen — coming next" },
-    "cinema": { "title": "Cinema", "desc": "Multi-shot storyboards stitched into a scene.", "status": "Coming next" },
-    "lipsync": { "title": "Lip Sync", "desc": "Sync a face to any audio track.", "status": "Needs a lip-sync provider (fal / Replicate)" },
-    "clipping": { "title": "Clipping", "desc": "Trim and cut your videos locally.", "status": "Local editor — coming next" },
-    "vibemotion": { "title": "Vibe Motion", "desc": "Transfer motion onto your images.", "status": "Powered by Oxen — coming next" }
+    "audio": {
+      "title": "Audio Studio",
+      "desc": "Generate music and voice from a prompt.",
+      "status": "Powered by Oxen — coming next"
+    },
+    "cinema": {
+      "title": "Cinema",
+      "desc": "Multi-shot storyboards stitched into a scene.",
+      "status": "Coming next"
+    },
+    "lipsync": {
+      "title": "Lip Sync",
+      "desc": "Sync a face to any audio track.",
+      "status": "Needs a lip-sync provider (fal / Replicate)"
+    },
+    "clipping": {
+      "title": "Clipping",
+      "desc": "Trim and cut your videos locally.",
+      "status": "Local editor — coming next"
+    },
+    "vibemotion": {
+      "title": "Vibe Motion",
+      "desc": "Transfer motion onto your images.",
+      "status": "Powered by Oxen — coming next"
+    }
   },
   "onboarding": {
     "title": "Welcome to JenAI Studio",
@@ -93,7 +133,10 @@
     "deleteConfirm": "Delete this asset and its file?",
     "saveAsset": "Save as asset",
     "saved": "Saved",
-    "src": { "upload": "uploaded", "generated": "generated" }
+    "src": {
+      "upload": "uploaded",
+      "generated": "generated"
+    }
   },
   "projects": {
     "title": "Projects",
@@ -151,11 +194,18 @@
   },
   "lightbox": {
     "author": "Author",
-    "info": "Info", "edit": "Edit", "comments": "Comments",
-    "prompt": "PROMPT", "copy": "Copy", "copied": "Copied",
+    "info": "Info",
+    "edit": "Edit",
+    "comments": "Comments",
+    "prompt": "PROMPT",
+    "copy": "Copy",
+    "copied": "Copied",
     "references": "References",
     "details": "DETAILS",
-    "model": "Model", "provider": "Provider", "type": "Type", "created": "Created",
+    "model": "Model",
+    "provider": "Provider",
+    "type": "Type",
+    "created": "Created",
     "turnToVideo": "Turn to video",
     "recreate": "Recreate",
     "reference": "Reference",
@@ -175,15 +225,26 @@
     "light": "Cream",
     "dark": "Studio dark",
     "privacy": "Your keys and files stay on this machine. No telemetry, no phone-home.",
-    "done": "Done"
+    "done": "Done",
+    "disable": "Disable",
+    "enable": "Enable",
+    "disabled": "Disabled",
+    "disableHint": "Hide this provider everywhere and stop the agent from using it",
+    "enableHint": "Turn this provider back on"
   },
-  "status": { "queued": "Queued", "running": "Making it…", "done": "Done", "error": "Error" },
+  "status": {
+    "queued": "Queued",
+    "running": "Making it…",
+    "done": "Done",
+    "error": "Error"
+  },
   "error": {
     "tile": "Error",
     "more": "More info",
     "retry": "Retry",
     "pasteTitle": "Paste this into your Claude",
-    "copy": "Copy", "copied": "Copied",
+    "copy": "Copy",
+    "copied": "Copied",
     "copyButton": "Click here to copy this text",
     "gotoAgent": "Go ahead now to your coding agent, ask it, and paste this there.",
     "technical": "Technical details"
@@ -206,6 +267,15 @@
     "failHint": "Still off. In OpenRouter → Privacy → Zero Data Retention, turn the OpenAI toggle off, then come back and press Check.",
     "inconclusive": "Couldn't check right now — try again in a moment."
   },
-  "common": { "close": "Close", "cancel": "Cancel", "image": "Image", "video": "Video", "confirm": "Yes, go" },
-  "confirmBatch": { "title": "Generate {count}?", "body": "This will make {count} at about ${cost}." }
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "image": "Image",
+    "video": "Video",
+    "confirm": "Yes, go"
+  },
+  "confirmBatch": {
+    "title": "Generate {count}?",
+    "body": "This will make {count} at about ${cost}."
+  }
 }

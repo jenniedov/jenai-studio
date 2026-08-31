@@ -173,6 +173,19 @@ test('oxen with a local reference and no Kie key fails clearly, not "model busy"
   assert.match(JSON.stringify(r.error.raw || ''), /Kie|reference|reachable/i);
 });
 
+test('a disabled provider is refused by createJobs and re-enabling restores it', async () => {
+  const { createJobs } = await import('../server/engine.js');
+  const req = { task: 'image', model: 'nano-banana-pro', provider: 'oxen', prompt: 'x', num_outputs: 1 };
+  // Enabled by default → creates jobs fine.
+  assert.ok(createJobs(req).jobs.length === 1);
+  store.setProviderDisabled('oxen', true);
+  assert.equal(store.isProviderEnabled('oxen'), false);
+  assert.throws(() => createJobs(req), (e) => /disabled/.test(e.message || e.error || JSON.stringify(e)));
+  store.setProviderDisabled('oxen', false);
+  assert.equal(store.isProviderEnabled('oxen'), true);
+  assert.ok(createJobs(req).jobs.length === 1);
+});
+
 test('deleting a project purges its assets and their files', () => {
   const doomed = 'doomed-project';
   store.addProject(doomed);

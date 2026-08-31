@@ -23,6 +23,7 @@ export function availableProviders(model, providers, openrouterOpenaiOk = true) 
   if (!model) return [];
   const slugs = model.providers || {};
   return providers.filter((p) => {
+    if (p.disabled) return false; // switched off by the user
     if (!slugs[p.id]) return false;
     if (p.id === 'openrouter' && needsOpenrouterDataSharing(model) && !openrouterOpenaiOk) return false;
     return true;

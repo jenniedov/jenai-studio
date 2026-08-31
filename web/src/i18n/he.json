@@ -1,6 +1,23 @@
 {
-  "app": { "tagline": "מייצרים תמונות וסרטונים על המחשב שלך" },
-  "nav": { "projects": "פרויקטים", "images": "תמונות", "videos": "סרטונים", "cinema": "סינמה", "lipsync": "ליפ סינק", "audio": "אודיו", "clipping": "חיתוך", "vibemotion": "Vibe Motion", "skills": "יכולות", "agent": "סוכן", "update": "עדכון", "theme": "מראה", "settings": "הגדרות", "keys": "מפתחות" },
+  "app": {
+    "tagline": "מייצרים תמונות וסרטונים על המחשב שלך"
+  },
+  "nav": {
+    "projects": "פרויקטים",
+    "images": "תמונות",
+    "videos": "סרטונים",
+    "cinema": "סינמה",
+    "lipsync": "ליפ סינק",
+    "audio": "אודיו",
+    "clipping": "חיתוך",
+    "vibemotion": "Vibe Motion",
+    "skills": "יכולות",
+    "agent": "סוכן",
+    "update": "עדכון",
+    "theme": "מראה",
+    "settings": "הגדרות",
+    "keys": "מפתחות"
+  },
   "agent": {
     "heading": "לחבר את הסוכן שלכם",
     "subtitle": "שתי הנחיות: הראשונה מתקינה הכל (פעם אחת), השנייה פותחת כל סשן יצירה חדש.",
@@ -51,13 +68,36 @@
     "deleteTitle": "למחוק את היכולת",
     "deleteBody": "למחוק את \"{name}\"?"
   },
-  "cinema": { "placeholder": "מתארים את השוט", "look": "לוק" },
+  "cinema": {
+    "placeholder": "מתארים את השוט",
+    "look": "לוק"
+  },
   "studios": {
-    "audio": { "title": "סטודיו אודיו", "desc": "מייצרים מוזיקה וקול מטקסט", "status": "רץ על Oxen — בקרוב" },
-    "cinema": { "title": "סינמה", "desc": "סטוריבורד רב-שוטים שמתחבר לסצנה", "status": "בקרוב" },
-    "lipsync": { "title": "ליפ סינק", "desc": "מסנכרנים פנים לכל קול", "status": "צריך ספק ליפ סינק (fal / Replicate)" },
-    "clipping": { "title": "חיתוך", "desc": "חותכים ועורכים סרטונים מקומית", "status": "עורך מקומי — בקרוב" },
-    "vibemotion": { "title": "Vibe Motion", "desc": "מעבירים תנועה על התמונות שלך", "status": "רץ על Oxen — בקרוב" }
+    "audio": {
+      "title": "סטודיו אודיו",
+      "desc": "מייצרים מוזיקה וקול מטקסט",
+      "status": "רץ על Oxen — בקרוב"
+    },
+    "cinema": {
+      "title": "סינמה",
+      "desc": "סטוריבורד רב-שוטים שמתחבר לסצנה",
+      "status": "בקרוב"
+    },
+    "lipsync": {
+      "title": "ליפ סינק",
+      "desc": "מסנכרנים פנים לכל קול",
+      "status": "צריך ספק ליפ סינק (fal / Replicate)"
+    },
+    "clipping": {
+      "title": "חיתוך",
+      "desc": "חותכים ועורכים סרטונים מקומית",
+      "status": "עורך מקומי — בקרוב"
+    },
+    "vibemotion": {
+      "title": "Vibe Motion",
+      "desc": "מעבירים תנועה על התמונות שלך",
+      "status": "רץ על Oxen — בקרוב"
+    }
   },
   "onboarding": {
     "title": "ברוכים הבאים ל-JenAI Studio",
@@ -93,7 +133,10 @@
     "deleteConfirm": "למחוק את הנכס הזה ואת הקובץ שלו?",
     "saveAsset": "שמירה כנכס",
     "saved": "נשמר",
-    "src": { "upload": "הועלה", "generated": "נוצר" }
+    "src": {
+      "upload": "הועלה",
+      "generated": "נוצר"
+    }
   },
   "projects": {
     "title": "פרויקטים",
@@ -151,11 +194,18 @@
   },
   "lightbox": {
     "author": "יוצר",
-    "info": "מידע", "edit": "עריכה", "comments": "תגובות",
-    "prompt": "פרומפט", "copy": "העתקה", "copied": "הועתק",
+    "info": "מידע",
+    "edit": "עריכה",
+    "comments": "תגובות",
+    "prompt": "פרומפט",
+    "copy": "העתקה",
+    "copied": "הועתק",
     "references": "רפרנסים",
     "details": "פרטים",
-    "model": "מודל", "provider": "ספק", "type": "סוג", "created": "נוצר",
+    "model": "מודל",
+    "provider": "ספק",
+    "type": "סוג",
+    "created": "נוצר",
     "turnToVideo": "להפוך לסרטון",
     "recreate": "ליצור שוב",
     "reference": "רפרנס",
@@ -175,15 +225,26 @@
     "light": "קרם",
     "dark": "כהה",
     "privacy": "המפתחות והקבצים נשארים על המחשב הזה\nבלי מעקב בלי שליחה לשום מקום",
-    "done": "סיום"
+    "done": "סיום",
+    "disable": "כיבוי",
+    "enable": "הפעלה",
+    "disabled": "מכובה",
+    "disableHint": "מסתיר את הספק בכל מקום ומונע מהסוכן להשתמש בו",
+    "enableHint": "הפעלה מחדש של הספק"
   },
-  "status": { "queued": "בתור", "running": "אוטוטו מוכן...", "done": "מוכן", "error": "שגיאה" },
+  "status": {
+    "queued": "בתור",
+    "running": "אוטוטו מוכן...",
+    "done": "מוכן",
+    "error": "שגיאה"
+  },
   "error": {
     "tile": "שגיאה",
     "more": "פרטים",
     "retry": "לנסות שוב",
     "pasteTitle": "מדביקים את זה ל-Claude",
-    "copy": "העתקה", "copied": "הועתק",
+    "copy": "העתקה",
+    "copied": "הועתק",
     "copyButton": "לוחצים כאן ומעתיקים את הטקסט",
     "gotoAgent": "עכשיו הולכים ל-coding agent שלכם\nמבקשים ומדביקים לו את זה",
     "technical": "פרטים טכניים"
@@ -206,6 +267,15 @@
     "failHint": "עדיין כבוי\nב-OpenRouter נכנסים ל-Privacy ואז Zero Data Retention ומכבים את המתג של OpenAI\nאז חוזרים ולוחצים בדיקה",
     "inconclusive": "לא הצלחנו לבדוק עכשיו\nמנסים שוב עוד רגע"
   },
-  "common": { "close": "סגירה", "cancel": "ביטול", "image": "תמונה", "video": "סרטון", "confirm": "כן קדימה" },
-  "confirmBatch": { "title": "מייצרים {count}", "body": "זה ייצר {count} בערך ב-${cost}" }
+  "common": {
+    "close": "סגירה",
+    "cancel": "ביטול",
+    "image": "תמונה",
+    "video": "סרטון",
+    "confirm": "כן קדימה"
+  },
+  "confirmBatch": {
+    "title": "מייצרים {count}",
+    "body": "זה ייצר {count} בערך ב-${cost}"
+  }
 }

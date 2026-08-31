@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { getAdapter } from './adapters/index.js';
-import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster, setOpenrouterOpenaiVerified, localFileToDataUrl } from './storage/store.js';
+import { getKey, putJob, getJob, downloadToFiles, makeVideoPoster, setOpenrouterOpenaiVerified, localFileToDataUrl, isProviderEnabled } from './storage/store.js';
 import { makeError, codeFromMessage } from './errors/map.js';
 import { normalizeOptions, applyCustomOptions } from './options.js';
 
@@ -41,6 +41,7 @@ export function createJobs(req) {
   const providerId = req.provider;
   const adapter = getAdapter(providerId);
   if (!adapter) throw badRequest(`unknown provider "${providerId}"`);
+  if (!isProviderEnabled(providerId)) throw badRequest(`provider "${providerId}" is disabled — enable it in the Keys tab, or use another provider`);
 
   const providerSlug = model.providers?.[providerId];
   if (!providerSlug) throw badRequest(`model "${req.model}" is not available on ${providerId}`);

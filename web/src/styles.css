@@ -545,3 +545,7 @@ a.btn.copy-mini { text-decoration: none; display: inline-flex; align-items: cent
 .agent-step2 { margin-top: 20px; }
 .agent-step2-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
 .agent-step2-head strong { font-size: 14.5px; }
+
+/* Disabled provider row in Settings */
+.settings-key-row.is-disabled { opacity: .6; }
+.settings-key-row.is-disabled strong { text-decoration: line-through; }

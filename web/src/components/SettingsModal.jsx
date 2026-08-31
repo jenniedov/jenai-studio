@@ -92,14 +92,17 @@ function KeyRow({ t, provider, onChanged, onKeySaved }) {
     if (v) await onKeySaved?.(provider.id);
   };
   const remove = async () => { await api.setKey(provider.id, ''); onChanged(); };
+  const toggle = async () => { await api.disableProvider(provider.id, !provider.disabled); onChanged(); };
 
   return (
-    <div className="settings-key-row">
+    <div className={`settings-key-row ${provider.disabled ? 'is-disabled' : ''}`}>
       <div>
         <strong>{provider.label}</strong>{' '}
-        {provider.hasKey
-          ? <span className="badge badge-ok">{t('settings.keySet')} ····{provider.last4}</span>
-          : <span className="badge badge-off">{t('settings.noKey')}</span>}
+        {provider.disabled
+          ? <span className="badge badge-off">{t('settings.disabled')}</span>
+          : provider.hasKey
+            ? <span className="badge badge-ok">{t('settings.keySet')} ····{provider.last4}</span>
+            : <span className="badge badge-off">{t('settings.noKey')}</span>}
       </div>
       {editing ? (
         <div style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
@@ -113,6 +116,10 @@ function KeyRow({ t, provider, onChanged, onKeySaved }) {
             {provider.hasKey ? '✎' : '+'} {t('settings.add')}
           </button>
           {provider.hasKey && <button className="btn btn-ghost" onClick={remove}>{t('settings.remove')}</button>}
+          <button className={`btn ${provider.disabled ? 'btn-accent' : 'btn-ghost'}`} onClick={toggle}
+            title={provider.disabled ? t('settings.enableHint') : t('settings.disableHint')}>
+            {provider.disabled ? t('settings.enable') : t('settings.disable')}
+          </button>
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import { dirname, join } from 'node:path';
 import {
   ensureDirs, getConfig, getKey, setKey, maskedKeyStatus, saveSettings, setOpenrouterOpenaiVerified,
   getProjects, getArchivedProjects, addProject, reorderProjects, setProjectArchived, deleteProject, renameProject,
+  getDisabledProviders, setProviderDisabled,
   getJobs, getJob, deleteJob, filesDir, dataDir,
   saveUpload, flushJobs, backfillPosters,
   getAssets, addAssetFromUpload, addAssetFromJob, addAssetFromUrl,
@@ -51,17 +52,40 @@ api.get('/config', (_req, res) => {
   res.json({ branding, settings: cfg.settings, legal: { he: legalHe }, batchCap: BATCH_CAP });
 });
 
-api.get('/models', (_req, res) => res.json(models));
+// Models, with each model's provider map filtered to only ENABLED providers —
+// so a disabled provider disappears from every generation list (UI + MCP).
+api.get('/models', (_req, res) => {
+  const off = new Set(getDisabledProviders());
+  if (off.size === 0) return res.json(models);
+  const filtered = {
+    ...models,
+    models: models.models.map((m) => {
+      const providers = Object.fromEntries(Object.entries(m.providers || {}).filter(([id]) => !off.has(id)));
+      return { ...m, providers };
+    }),
+  };
+  res.json(filtered);
+});
 
 // Configured providers + whether a key exists (never the key itself).
 api.get('/providers', (_req, res) => {
   const status = maskedKeyStatus();
+  const off = new Set(getDisabledProviders());
   const providers = listAdapters().map((p) => ({
     ...p,
     hasKey: Boolean(status[p.id]?.hasKey),
     last4: status[p.id]?.last4 || null,
+    disabled: off.has(p.id),
   }));
   res.json({ providers });
+});
+
+// Turn a provider on/off. Disabled providers vanish from all generation lists
+// and are refused by /generate (so the MCP can't use them either).
+api.post('/providers/disable', (req, res) => {
+  const { provider, disabled } = req.body || {};
+  if (!provider) return res.status(400).json({ error: 'provider is required' });
+  res.json({ disabledProviders: setProviderDisabled(provider, !!disabled) });
 });
 
 api.post('/keys', (req, res) => {
