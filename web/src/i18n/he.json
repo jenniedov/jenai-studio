@@ -105,7 +105,7 @@
     "provider": "ספק",
     "keyLabel": "מדביקים את המפתח",
     "keyPlaceholder": "sk-...",
-    "getKey": "להשיג API key חינם",
+    "getKey": "כאן משיגים API key",
     "save": "מתחילים",
     "skip": "אחר כך",
     "freeCreditsNote": "קרדיטים חינם\nבלי כרטיס"
