@@ -12,6 +12,21 @@
 
 const PREF_ASPECT = { image: ['1:1', '16:9', '4:3'], video: ['16:9', '9:16', '1:1'] };
 
+// A model as seen THROUGH one provider. Some models expose fewer capabilities on
+// a given provider (e.g. OpenAI image models on OpenRouter accept only 1:1/3:2/2:3
+// and no resolution). `providerOverrides[providerId]` shallow-overrides fields
+// like aspectRatios / resolutions so the option schema reflects reality and the
+// UI/MCP never offer an option the provider will reject.
+export function modelForProvider(model, providerId) {
+  const ov = model?.providerOverrides?.[providerId];
+  return ov ? { ...model, ...ov } : model;
+}
+
+// The option schema for a model on a specific provider.
+export function optionSchemaFor(model, providerId) {
+  return optionSchema(modelForProvider(model, providerId));
+}
+
 // The full, ordered option schema for a model — what the UI renders and the
 // mapper reads. Built-ins first, then the model's custom options.
 export function optionSchema(model) {

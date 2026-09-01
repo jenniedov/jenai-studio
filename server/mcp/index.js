@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { optionSchemaFor } from '../options.js';
 
 const PORT = process.env.PORT || 4317;
 const BASE = `http://localhost:${PORT}`;
@@ -234,13 +235,14 @@ server.registerTool('list_models', {
 
 server.registerTool('get_model_options', {
   title: 'Get model options',
-  description: 'Get the full option schema for one model — every option it accepts, its type, allowed values, and default.',
-  inputSchema: { model: z.string() },
-}, async ({ model }) => {
+  description: 'Get the full option schema for one model — every option it accepts, its type, allowed values, and default. Some models expose fewer options on a given provider (e.g. OpenAI image models on OpenRouter accept only 1:1/3:2/2:3 and no resolution), so pass `provider` to get the exact schema for that route.',
+  inputSchema: { model: z.string(), provider: z.string().optional().describe('kie | oxen | openrouter — narrows the schema to what that provider accepts') },
+}, async ({ model, provider }) => {
   const { models } = await api('/models');
   const m = models.find((x) => x.key === model);
   if (!m) throw new Error(`unknown model "${model}"`);
-  return text({ model: m.key, type: m.type, providers: Object.keys(m.providers || {}), optionSchema: m.optionSchema || [] });
+  const schema = provider ? optionSchemaFor(m, provider) : (m.optionSchema || []);
+  return text({ model: m.key, type: m.type, provider: provider || null, providers: Object.keys(m.providers || {}), optionSchema: schema });
 });
 
 server.registerTool('estimate_cost', {

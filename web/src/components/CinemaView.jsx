@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { api } from '../lib/api.js';
-import { useStudio, availableProviders, resolveProvider, unitCost } from '../lib/studio.jsx';
+import { useStudio, availableProviders, resolveProvider, unitCost, modelForProvider } from '../lib/studio.jsx';
 import { LOOKS, LOOK_CATEGORIES, DEFAULT_LOOK, applyLook } from '../lib/cinema.js';
 import ModelPicker from './ModelPicker.jsx';
 import PillSelect from './PillSelect.jsx';
@@ -20,9 +20,12 @@ export default function CinemaView() {
   const model = imageModels.find((m) => m.key === modelKey) || imageModels[0];
   const provs = availableProviders(model, providers);
   const [provider, setProvider] = useState(() => resolveProvider(model, providers)?.id || '');
+  // The model as seen through the chosen provider — some routes expose fewer
+  // aspect ratios / no resolution (e.g. OpenAI on OpenRouter).
+  const em = modelForProvider(model, provider);
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState('16:9');
-  const [resolution, setResolution] = useState(model?.resolutions?.[0] || '');
+  const [resolution, setResolution] = useState(em?.resolutions?.[0] || '');
   const [look, setLook] = useState({ ...DEFAULT_LOOK });
   const [showLook, setShowLook] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -38,14 +41,25 @@ export default function CinemaView() {
     el.style.height = `${el.scrollHeight}px`;
   }, [prompt]);
 
+  // Reset the provider to the model's default when the model changes.
   useEffect(() => {
     if (!model) return;
-    setResolution(model.resolutions?.[0] || '');
     setProvider(resolveProvider(model, providers)?.id || '');
-    if (!model.aspectRatios?.includes(aspect)) setAspect(model.aspectRatios?.includes('16:9') ? '16:9' : (model.aspectRatios?.[0] || '16:9'));
   }, [modelKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const aspects = useMemo(() => CINE_ASPECTS.filter((a) => (model?.aspectRatios || CINE_ASPECTS).includes(a)) || CINE_ASPECTS, [model]);
+  // Clamp aspect + resolution to what the current model+provider actually supports.
+  useEffect(() => {
+    const m = modelForProvider(model, provider);
+    if (!m) return;
+    setResolution((r) => (m.resolutions?.includes(r) ? r : (m.resolutions?.[0] || '')));
+    setAspect((a) => {
+      const allowed = m.aspectRatios;
+      if (!allowed?.length || allowed.includes(a)) return a;
+      return allowed.includes('16:9') ? '16:9' : allowed[0];
+    });
+  }, [modelKey, provider]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const aspects = useMemo(() => CINE_ASPECTS.filter((a) => (em?.aspectRatios || CINE_ASPECTS).includes(a)) || CINE_ASPECTS, [em]);
   const composed = applyLook(prompt, look);
   const lookActive = composed !== prompt.trim() && composed !== prompt;
   const cost = model?.priceUsd != null ? model.priceUsd.toFixed(2) : null;
@@ -110,9 +124,9 @@ export default function CinemaView() {
           )}
           <PillSelect renderIcon={(r) => <AspectIcon ratio={r} />} value={aspect}
             options={aspects.map((a) => ({ value: a, label: a }))} onChange={setAspect} />
-          {model?.resolutions?.length > 0 && (
+          {em?.resolutions?.length > 0 && (
             <PillSelect icon="◈" value={resolution}
-              options={model.resolutions.map((r) => ({ value: r, label: r }))} onChange={setResolution} />
+              options={em.resolutions.map((r) => ({ value: r, label: r }))} onChange={setResolution} />
           )}
           <button className="generate" disabled={!canGo} onClick={fire}>
             {t('prompt.generate')}{cost && <span className="cost">✦ ${cost}</span>}

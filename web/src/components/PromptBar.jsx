@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api.js';
-import { useStudio, availableProviders, resolveProvider, unitCost, priceFor } from '../lib/studio.jsx';
+import { useStudio, availableProviders, resolveProvider, unitCost, priceFor, schemaForProvider } from '../lib/studio.jsx';
 import ModelPicker from './ModelPicker.jsx';
 import PillSelect from './PillSelect.jsx';
 import AspectIcon from './AspectIcon.jsx';
@@ -28,18 +28,35 @@ export default function PromptBar({ type }) {
     () => (saved.modelKey && models.some((m) => m.key === saved.modelKey) ? saved.modelKey : models[0]?.key || ''),
   );
   const model = models.find((m) => m.key === modelKey) || models[0];
-  const schema = model?.optionSchema || [];
   const provs = availableProviders(model, providers, openrouterOpenaiOk);
 
   const [provider, setProvider] = useState(() => saved.provider || resolveProvider(model, providers, openrouterOpenaiOk)?.id || '');
   const [prompt, setPrompt] = useState(() => saved.prompt || '');
   const [count, setCount] = useState(() => saved.count || 1);
   const [refs, setRefs] = useState(() => saved.refs || []);
+  // The controls to render depend on the chosen PROVIDER: a model can expose
+  // fewer aspect ratios / no resolution on one route (e.g. OpenAI on OpenRouter).
+  const schema = useMemo(() => schemaForProvider(model, provider), [model, provider]);
   const [optionValues, setOptionValues] = useState(() => {
     const base = {};
-    for (const o of schema) base[o.key] = o.default;
+    for (const o of model?.optionSchema || []) base[o.key] = o.default;
     return { ...base, ...(saved.options || {}) };
   });
+  // When the effective schema narrows (model/provider change), snap any option
+  // value that's no longer allowed back to that option's default.
+  useEffect(() => {
+    setOptionValues((cur) => {
+      let changed = false;
+      const next = { ...cur };
+      for (const o of schema) {
+        if (o.values && next[o.key] !== undefined && !o.values.includes(next[o.key])) {
+          next[o.key] = o.default;
+          changed = true;
+        }
+      }
+      return changed ? next : cur;
+    });
+  }, [schema]);
   const [busy, setBusy] = useState(false);
   const [viewRef, setViewRef] = useState(null);
   const fileRef = useRef(null);

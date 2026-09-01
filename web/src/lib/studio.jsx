@@ -17,6 +17,33 @@ export function needsOpenrouterDataSharing(model) {
   return /^openai\//.test(model?.providers?.openrouter || '');
 }
 
+// A model as seen THROUGH one provider. Some models expose fewer capabilities on
+// a given route (e.g. OpenAI image models on OpenRouter accept only 1:1/3:2/2:3
+// and no resolution) — `providerOverrides[providerId]` shallow-overrides fields
+// like aspectRatios / resolutions so we never offer an option the provider rejects.
+export function modelForProvider(model, providerId) {
+  const ov = model?.providerOverrides?.[providerId];
+  return ov ? { ...model, ...ov } : model;
+}
+
+// Narrow a model's precomputed optionSchema to what `providerId` actually accepts:
+// swap aspect_ratio / resolution allowed values for the provider's, and drop the
+// option entirely when the provider supports none.
+export function schemaForProvider(model, providerId) {
+  const base = model?.optionSchema || [];
+  const ov = model?.providerOverrides?.[providerId];
+  if (!ov) return base;
+  return base
+    .map((o) => {
+      const key = o.key === 'aspect_ratio' ? 'aspectRatios' : o.key === 'resolution' ? 'resolutions' : null;
+      if (!key || ov[key] === undefined) return o;
+      const values = ov[key] || [];
+      if (!values.length) return null; // provider supports none → hide the control
+      return { ...o, values, default: values.includes(o.default) ? o.default : values[0] };
+    })
+    .filter(Boolean);
+}
+
 // Providers that have a slug for this model. `openrouterOpenaiOk` gates the
 // OpenAI-on-OpenRouter models: until verified working on this account, OpenRouter
 // is hidden for them (they still run on Kie/Oxen), so the UI never claims a
