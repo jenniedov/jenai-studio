@@ -1,65 +1,67 @@
 # פרומפט לתלמידים — התקנה והרצה
 
-**איך זה עובד:** התלמיד/ה פותח/ת סוכן קוד (Claude Code או GPT Codex) על המחשב, ומדביק/ה את הפרומפט שבמסגרת למטה. הסוכן עושה את הכול לבד: בודק דרישות, מוריד את הקוד, מתקין, ומריץ את האפליקציה על `http://localhost:4317`.
+**איך זה עובד:** התלמיד/ה פותח/ת סוכן קוד (Claude Code או GPT Codex) על המחשב, ומדביק/ה את הפרומפט. הסוכן עושה את הכול לבד — בודק/מתקין דרישות, מוריד את הקוד, מתקין, ומריץ את האפליקציה על `http://localhost:4317`.
 
-**מה צריך להיות מותקן מראש:** רק **Node.js 18+** ו-**Git**. (ffmpeg זה תוספת לא חובה — רק לתמונות תצוגה של סרטונים.)
+**הדבר היחיד שחייב מראש:** שהסוכן עצמו (Claude Code / Codex) יהיה מותקן ופתוח. את שאר הדברים (כולל Node) הסוכן יכול להתקין בעצמו, לרוב בלי סיסמת מנהל.
 
-**כמה זמן זה לוקח:** ~10–15 דקות בפעם הראשונה (רובו הורדות של Node/Git). אם Node ו-Git כבר מותקנים — 3–5 דקות.
+**כמה זמן:** ~10–15 דק' בפעם הראשונה; 3–5 דק' אם Node כבר מותקן.
+
+**שתי גרסאות:**
+- **גרסה 1 — עם Git.** הפשוטה והאמינה. **התחילו כאן.**
+- **גרסה 2 — בלי Git.** גיבוי — אם הראשונה לא עבדה (אין Git / חסום בארגון), השתמשו בזו.
 
 ---
 
-## הפרומפט להעתקה (עברית)
+## גרסה 1 — עם Git (התחילו כאן)
 
-> אני רוצה שתתקין לי אפליקציה בשם **JenAI Studio** ותריץ אותה על המחשב שלי. עשה זאת שלב-אחר-שלב, ואל תעבור לשלב הבא לפני שהקודם הצליח. דבר איתי בעברית, והסבר בפשטות אם משהו נכשל.
+> אני רוצה שתתקין ותריץ לי אפליקציה בשם **JenAI Studio** על המחשב שלי. עשה הכול בעצמך, שלב-אחר-שלב, ואל תעבור לשלב הבא לפני שהקודם הצליח. **אל תבקש ממני להריץ פקודות — תריץ אתה.** דבר איתי בעברית, והסבר בפשטות אם משהו נכשל.
 >
-> **1. בדיקת כלים.** הרץ `node --version` (צריך 18 ומעלה) ו-`git --version`. אם אחד מהם חסר — עצור ותגיד לי להתקין: Node מ-https://nodejs.org (גרסת LTS), ו-Git מ-https://git-scm.com . נמשיך אחרי שאתקין.
->
-> **2. הורדת הקוד.** הרץ:
+> **1.** ודא ש-Node בגרסה 18+ מותקן (`node --version`). אם לא — התקן אותו בעצמך **בלי סיסמת מנהל**: ב-Mac/Linux דרך `nvm`, ב-Windows דרך `winget` או `fnm`. רק אם ההתקנה באמת מחייבת סיסמת מנהל — עצור ובקש ממני.
+> **2.** ודא ש-Git מותקן (`git --version`). אם לא — התקן/הפעל אותו; אם צריך שאאשר חלון התקנה, כוון אותי מה ללחוץ.
+> **3.** הורד את הקוד והיכנס לתיקייה:
 > ```
 > git clone https://github.com/jenniedov/jenai-studio.git
 > cd jenai-studio
 > ```
->
-> **3. התקנה בפקודה אחת** (מתקינה תלויות ומחברת את ה-MCP של הסטודיו אליך):
+> **4.** הרץ התקנה בפקודה אחת (מתקינה תלויות ומחברת את ה-MCP של הסטודיו אליך):
 > ```
 > npm run setup
 > ```
->
-> **4. הרצת האפליקציה.** הפעל את השרת כך שיישאר לרוץ ברקע, ואז פתח אותו:
+> **5.** הפעל את השרת כך שיישאר לרוץ ברקע, ואז פתח לי אותו בדפדפן:
 > ```
 > npm start
 > ```
-> כשהוא עולה, פתח לי בדפדפן את **http://localhost:4317** .
+> כשהוא עולה, פתח לי את **http://localhost:4317** .
+> **6.** ודא שהכתובת עונה, תגיד לי "האפליקציה מוכנה", וכוון אותי לפופאפ שמבקש מפתח ספק (Oxen או Kie). אם אין לי — הסבר איך משיגים חינם.
 >
-> **5. אישור שהכול עובד.** ודא ש-`http://localhost:4317` עונה. כשזה רץ, תגיד לי "האפליקציה מוכנה" וכוון אותי לפופאפ שמבקש מפתח ספק (Oxen או Kie). אם אין לי מפתח — הסבר לי איך משיגים חינם.
->
-> אם קרתה שגיאה באחד השלבים — הצג לי אותה, הסבר בפשטות מה הבעיה, ונסה לתקן. אל תדלג על שלב שנכשל.
+> אם קרתה שגיאה באחד השלבים — הצג אותה, הסבר בפשטות מה הבעיה, ותקן. אל תדלג על שלב שנכשל.
 
 ---
 
-## The prompt (English)
+## גרסה 2 — בלי Git (אם הראשונה לא עבדה)
 
-> Install an app called **JenAI Studio** on my machine and run it. Do it step by step, and don't move to the next step until the current one succeeds. If something fails, explain it simply.
+> אני רוצה שתתקין ותריץ לי אפליקציה בשם **JenAI Studio** על המחשב שלי, **בלי להשתמש ב-Git**. עשה הכול בעצמך, שלב-אחר-שלב, ואל תעבור לשלב הבא לפני שהקודם הצליח. **אל תבקש ממני להריץ פקודות — תריץ אתה.** דבר איתי בעברית, והסבר בפשטות אם משהו נכשל.
 >
-> **1. Check tools.** Run `node --version` (need 18+) and `git --version`. If either is missing, stop and tell me to install it: Node from https://nodejs.org (LTS) and Git from https://git-scm.com . Continue after I install.
->
-> **2. Get the code.**
+> **1.** ודא ש-Node בגרסה 18+ מותקן (`node --version`). אם לא — התקן אותו בעצמך **בלי סיסמת מנהל**: ב-Mac/Linux דרך `nvm`, ב-Windows דרך `winget` או `fnm`. רק אם ההתקנה באמת מחייבת סיסמת מנהל — עצור ובקש ממני.
+> **2.** הורד את הקוד **בלי Git**, כקובץ ZIP, והיכנס לתיקייה:
 > ```
-> git clone https://github.com/jenniedov/jenai-studio.git
-> cd jenai-studio
+> curl -L https://github.com/jenniedov/jenai-studio/archive/refs/heads/main.tar.gz | tar xz
+> cd jenai-studio-main
 > ```
->
-> **3. One-command setup** (installs dependencies and connects the studio's MCP to you):
+> אם אין `curl`/`tar` במערכת: הורד ידנית מ-https://github.com/jenniedov/jenai-studio (כפתור **Code → Download ZIP**), חלץ, והיכנס לתיקייה שנוצרה.
+> **3.** הרץ התקנה בפקודה אחת (מתקינה תלויות ומחברת את ה-MCP של הסטודיו אליך):
 > ```
 > npm run setup
 > ```
->
-> **4. Run it.** Start the server as a background process so it stays running, then open it:
+> **4.** הפעל את השרת כך שיישאר לרוץ ברקע, ואז פתח לי אותו בדפדפן:
 > ```
 > npm start
 > ```
-> Open **http://localhost:4317** in my browser once it's up.
+> כשהוא עולה, פתח לי את **http://localhost:4317** .
+> **5.** ודא שהכתובת עונה, תגיד לי "האפליקציה מוכנה", וכוון אותי לפופאפ שמבקש מפתח ספק (Oxen או Kie). אם אין לי — הסבר איך משיגים חינם.
 >
-> **5. Confirm.** Make sure `http://localhost:4317` responds. When it's running, tell me "the app is ready" and point me to the popup asking for a provider key (Oxen or Kie). If I don't have one, explain how to get a free key.
->
-> If any step errors, show it, explain it simply, and try to fix it. Don't skip a failed step.
+> אם קרתה שגיאה באחד השלבים — הצג אותה, הסבר בפשטות מה הבעיה, ותקן. אל תדלג על שלב שנכשל.
+
+---
+
+גרסאות באנגלית: ראו [`student-prompt.en.md`](student-prompt.en.md).
