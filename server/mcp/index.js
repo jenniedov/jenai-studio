@@ -170,10 +170,17 @@ function resultContent(jobs, { inlineImages = true } = {}) {
   const pending = jobs.filter((j) => j.status !== 'done' && j.status !== 'error');
   if (pending.length) {
     const idList = pending.map((j) => j.job_id);
+    // Poll cadence scales to how fast the job can actually change: images settle
+    // in seconds, video in minutes. check_jobs only reads local studio state (no
+    // upstream calls), so a tight 5s image loop is cheap; a 30s video loop avoids
+    // burning agent turns on a state that won't have moved.
+    const anyVideo = pending.some((j) => j.task === 'video');
+    const every = anyVideo ? '~30s' : '~5s';
+    const eta = anyVideo ? 'video can take up to ~15 min' : 'images usually finish in ~1–2 min';
     content.push({ type: 'text', text:
-      `⏳ ${pending.length} still generating — this is normal (images take ~1–2 min, video can take up to ~15 min). `
+      `⏳ ${pending.length} still generating — this is normal (${eta}). `
       + `The studio keeps working in the background; nothing is lost. Do NOT resubmit (it costs money). `
-      + `Wait, then call check_jobs({ job_ids: ${JSON.stringify(idList)} }) — repeat every ~30–60s until they're done. `
+      + `Wait, then call check_jobs({ job_ids: ${JSON.stringify(idList)} }) — repeat every ${every} until they're done. `
       + `They also appear live in the JenAI Studio browser tab.` });
   }
   content.unshift({ type: 'text', text: lines.join('\n') || 'No results.' });
@@ -298,13 +305,13 @@ const genSchema = {
 
 server.registerTool('generate_image', {
   title: 'Generate image(s)',
-  description: 'Generate one or more images into a project. Submits and waits briefly; if they finish fast you get links + inline previews, otherwise you get job ids to poll with check_jobs (the studio keeps working — never resubmit). Set count for a batch.',
+  description: 'Generate one or more images into a project. Submits and waits briefly; if they finish fast you get links + inline previews, otherwise you get job ids to poll with check_jobs every ~5s (images settle in seconds; the studio keeps working — never resubmit). Set count for a batch.',
   inputSchema: { ...genSchema, count: z.number().optional().describe('how many (1–20)') },
 }, async (a) => generateAndReport(a, { task: 'image' }));
 
 server.registerTool('generate_video', {
   title: 'Generate video',
-  description: 'Generate a video into a project. Video takes minutes (up to ~15), so this returns a job id almost immediately — then poll check_jobs every ~30–60s until it is done. NEVER resubmit while it is running (it costs money). Options like duration/generate_audio come from get_model_options.',
+  description: 'Generate a video into a project. Video takes minutes (up to ~15), so this returns a job id almost immediately — then poll check_jobs every ~30s until it is done. NEVER resubmit while it is running (it costs money). Options like duration/generate_audio come from get_model_options.',
   inputSchema: genSchema,
 }, async (a) => generateAndReport(a, { task: 'video', budgetMs: Math.min(WAIT_MS, 8000), inlineImages: false }));
 
@@ -320,7 +327,7 @@ server.registerTool('get_job', {
 
 server.registerTool('check_jobs', {
   title: 'Check jobs',
-  description: 'Check the current status of one or more generation jobs WITHOUT waiting — returns immediately with links + inline previews for the finished ones. Use this to poll jobs that generate_image / generate_video handed back as still-running. Repeat every ~30–60s until all are done. Never resubmit a job that is still running.',
+  description: 'Check the current status of one or more generation jobs WITHOUT waiting — returns immediately with links + inline previews for the finished ones. Use this to poll jobs that generate_image / generate_video handed back as still-running. Repeat every ~5s for images, ~30s for video, until all are done. Never resubmit a job that is still running.',
   inputSchema: { job_ids: z.array(z.string()) },
 }, async ({ job_ids }) => {
   const jobs = [];
