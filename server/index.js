@@ -18,6 +18,7 @@ import {
 } from './storage/store.js';
 import { listAdapters } from './adapters/index.js';
 import { probeOpenaiEligibility } from './adapters/openrouter.js';
+import { chat as llmChat, DEFAULT_LLM_MODEL } from './llm.js';
 import { refreshFeed, priceTable, feedMeta } from './feed/prices.js';
 import { optionSchema } from './options.js';
 import { listSkills, getSkill, saveUserSkill, deleteUserSkill } from './skills.js';
@@ -175,6 +176,19 @@ api.post('/estimate', (req, res) => {
   const { model, num_outputs } = req.body || {};
   res.json({ cost: estimateCost(model, Number(num_outputs) || 1), batchCap: BATCH_CAP });
 });
+
+// Text LLM (OpenRouter chat). Synchronous — small apps inside the studio call
+// this to get a language model with the user's existing OpenRouter key. Not
+// surfaced in the UI; it's a building block for app logic and the MCP `chat` tool.
+api.post('/llm', async (req, res) => {
+  const out = await llmChat(req.body || {});
+  if (out.error) {
+    const status = out.error.status && out.error.status >= 400 ? out.error.status : 400;
+    return res.status(status).json({ error: out.error });
+  }
+  res.json(out);
+});
+api.get('/llm/default', (_req, res) => res.json({ model: DEFAULT_LLM_MODEL }));
 
 // The universal generate endpoint. Creates jobs immediately, processes in the
 // background, and returns the queued jobs so the UI/Claude can poll them.

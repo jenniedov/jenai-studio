@@ -318,6 +318,33 @@ server.registerTool('estimate_cost', {
   return text({ model, provider, unit: p.unit, unitPrice: p.price, total: Number(total.toFixed(4)) });
 });
 
+server.registerTool('chat', {
+  title: 'Chat (LLM)',
+  description: 'Call a text LLM through the user\'s OpenRouter key — a building block for small apps/logic inside the studio (summarize, classify, draft, extract JSON, etc.). Give `prompt` (or a full `messages` array) and optionally `system`, `model` (any OpenRouter chat-model slug; default meta-llama/llama-3.3-70b-instruct), `temperature`, `max_tokens`. Returns the model\'s text. Images/video use generate_image / generate_video instead.',
+  inputSchema: {
+    prompt: z.string().optional().describe('the user message (use this OR messages)'),
+    messages: z.array(z.object({ role: z.enum(['system', 'user', 'assistant']), content: z.string() })).optional().describe('full conversation, overrides prompt'),
+    system: z.string().optional().describe('system instruction prepended to the conversation'),
+    model: z.string().optional().describe('OpenRouter chat-model slug; omit for the default'),
+    temperature: z.number().optional(),
+    max_tokens: z.number().optional(),
+  },
+}, async (a) => {
+  await ensureStudio();
+  let r, j;
+  try {
+    r = await fetch(`${API}/llm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(a) });
+    j = await r.json().catch(() => null);
+  } catch (e) {
+    return text(`⚠ Studio not reachable: ${e.message}`);
+  }
+  if (!r.ok || j?.error) {
+    const f = j?.error?.friendly?.en;
+    return text(f ? `⚠ ${f.title} — ${f.body}` : `⚠ LLM error (${r.status})`);
+  }
+  return text(j.text ?? '');
+});
+
 server.registerTool('list_projects', {
   title: 'List projects', description: 'List the studio projects (each is a folder that groups a session\'s images and videos).', inputSchema: {},
 }, async () => text(await api('/projects')));
