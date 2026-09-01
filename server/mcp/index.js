@@ -136,6 +136,57 @@ async function generateAndReport(args, { task, budgetMs = WAIT_MS, inlineImages 
   return resultContent(jobs, { inlineImages });
 }
 
+// Human approval gate for VIDEO. Video costs real money and takes minutes, so we
+// never start one without an explicit yes from the person. Two layers:
+//   1) MCP elicitation — a true prompt to the human via the client UI. Used when
+//      the client supports it; the agent can't answer on the person's behalf.
+//   2) Fallback confirm token — for clients without elicitation, the first call
+//      refuses to submit and tells the agent to ASK the person and only re-call
+//      with confirm:true after a real yes.
+// Returns { ok:true } to proceed, or { blocked:<mcp response> } to stop.
+async function gateVideo(a) {
+  let costLine = '';
+  try {
+    const { cost } = await post('/estimate', { model: a.model, num_outputs: 1 });
+    if (cost != null) costLine = ` Estimated cost ≈ $${cost}.`;
+  } catch { /* estimate is best-effort */ }
+  const dur = a.options?.duration ?? a.options?.duration_seconds;
+  const summary = `Generate a video in project "${a.project}" with ${a.model}`
+    + (dur ? `, ${dur}s` : '') + `.${costLine}`
+    + `\nPrompt: “${String(a.prompt || '').slice(0, 200)}”`;
+
+  // 1) True human gate via elicitation, when the client supports it.
+  const caps = server.server.getClientCapabilities?.();
+  if (caps?.elicitation) {
+    try {
+      const r = await server.server.elicitInput({
+        message: `🎬 Video generation costs money and takes minutes.\n${summary}\n\nDo you want me to generate this video?`,
+        requestedSchema: {
+          type: 'object',
+          properties: {
+            proceed: { type: 'boolean', title: 'Generate this video?', description: 'Yes starts the render and charges your provider.' },
+          },
+          required: ['proceed'],
+        },
+      });
+      if (r.action === 'accept' && r.content?.proceed === true) return { ok: true };
+      const why = r.action === 'accept' ? 'you chose not to proceed' : `you ${r.action}ed`;
+      return { blocked: text(`🛑 Video not generated — ${why}. Nothing was charged.`) };
+    } catch (e) {
+      log(`elicitation unavailable, falling back to confirm token: ${e.message}`);
+    }
+  }
+
+  // 2) Fallback: explicit confirm token. Never submit without a real yes.
+  if (a.confirm === true) return { ok: true };
+  return { blocked: text(
+    `🎬 STOP — do not generate yet. Video is expensive and takes minutes.\n`
+    + `${summary}\n\n`
+    + `Ask the PERSON, in their language, exactly: "Do you want me to generate this video?" `
+    + `Only after they explicitly say yes, call generate_video again with the same arguments plus confirm: true. `
+    + `Never pass confirm: true unless the person actually approved.`) };
+}
+
 // Turn finished jobs into MCP content: a text summary, inline image previews,
 // and a JSON block so the agent has structured references.
 function resultContent(jobs, { inlineImages = true } = {}) {
@@ -311,9 +362,13 @@ server.registerTool('generate_image', {
 
 server.registerTool('generate_video', {
   title: 'Generate video',
-  description: 'Generate a video into a project. Video takes minutes (up to ~15), so this returns a job id almost immediately — then poll check_jobs every ~30s until it is done. NEVER resubmit while it is running (it costs money). Options like duration/generate_audio come from get_model_options.',
-  inputSchema: genSchema,
-}, async (a) => generateAndReport(a, { task: 'video', budgetMs: Math.min(WAIT_MS, 8000), inlineImages: false }));
+  description: 'Generate a video into a project. ALWAYS ask the person for approval first — video costs real money. This tool enforces it: it will not start until the person confirms (via a prompt to them, or, on clients without that, until you re-call with confirm:true after they say yes). Video takes minutes (up to ~15), so once approved it returns a job id almost immediately — then poll check_jobs every ~30s until done. NEVER resubmit while it is running. Options like duration/generate_audio come from get_model_options.',
+  inputSchema: { ...genSchema, confirm: z.boolean().optional().describe('set true ONLY after the person has explicitly approved generating this video (cost gate)') },
+}, async (a) => {
+  const gate = await gateVideo(a);
+  if (!gate.ok) return gate.blocked;
+  return generateAndReport(a, { task: 'video', budgetMs: Math.min(WAIT_MS, 8000), inlineImages: false });
+});
 
 server.registerTool('edit_image', {
   title: 'Edit image',
