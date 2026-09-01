@@ -214,7 +214,8 @@
     "reference": "רפרנס",
     "download": "הורדה",
     "copyImage": "העתקת תמונה",
-    "imageCopied": "הועתק"
+    "imageCopied": "הועתק",
+    "delete": "מחיקה"
   },
   "settings": {
     "title": "הגדרות",

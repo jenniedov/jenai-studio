@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api.js';
 import { useStudio } from '../lib/studio.jsx';
+import { useDialog } from './Dialog.jsx';
 
 // Detail drawer for a finished generation. Image/video on the left stage,
 // info + actions on the right. Close via ×, backdrop, or Esc.
@@ -9,6 +10,7 @@ import { useStudio } from '../lib/studio.jsx';
 // moves the selection in the direction pressed.
 export default function Lightbox({ job, onClose, listRef, onNavigate }) {
   const { t, turnToVideo, setImageRefs, setVideoRef, setRecreate, setView } = useStudio();
+  const dialog = useDialog();
   const [tab, setTab] = useState('info');
   const [copied, setCopied] = useState(false);
   const [imgCopied, setImgCopied] = useState(false);
@@ -79,6 +81,15 @@ export default function Lightbox({ job, onClose, listRef, onNavigate }) {
   const recreate = () => {
     setRecreate({ task: job.task, prompt: job.prompt, model: job.model });
     setView(job.task === 'video' ? 'videos' : 'images');
+    onClose();
+  };
+
+  const remove = async () => {
+    const ok = await dialog.confirm({ title: t('gallery.deleteConfirm'), danger: true, confirmText: t('projects.delete') });
+    if (!ok) return;
+    try { await api.deleteJob(job.job_id); } catch { /* already gone */ }
+    // Tell every open MediaGrid to drop this tile from its map.
+    window.dispatchEvent(new CustomEvent('jenai:deleted', { detail: job.job_id }));
     onClose();
   };
 
@@ -157,6 +168,7 @@ export default function Lightbox({ job, onClose, listRef, onNavigate }) {
               </button>
             )}
           </div>
+          <button className="btn-sec lb-delete" onClick={remove}>🗑 {t('lightbox.delete')}</button>
         </div>
       </aside>
       {refView && (

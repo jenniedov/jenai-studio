@@ -214,7 +214,8 @@
     "reference": "Reference",
     "download": "Download",
     "copyImage": "Copy image",
-    "imageCopied": "Copied"
+    "imageCopied": "Copied",
+    "delete": "Delete"
   },
   "settings": {
     "title": "Settings",

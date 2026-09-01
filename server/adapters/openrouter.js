@@ -45,6 +45,28 @@ function normSize(req) {
   return { aspect, resolution };
 }
 
+// OpenAI's image models on OpenRouter accept ONLY aspect_ratio 1:1 / 3:2 / 2:3
+// (or auto), and reject a `resolution` field entirely. Anything else (16:9, 9:16,
+// 4:5, "1K"…) 400s. Snap a requested aspect to the nearest supported one so a
+// perfectly reasonable "16:9 landscape" still generates instead of erroring.
+const OPENAI_ASPECTS = [
+  { s: '1:1', r: 1 },
+  { s: '3:2', r: 1.5 },
+  { s: '2:3', r: 2 / 3 },
+];
+function clampAspectForOpenai(aspect) {
+  if (!aspect || aspect === 'auto') return undefined; // let OpenAI default
+  const m = /^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/.exec(String(aspect).trim());
+  if (!m) return undefined;
+  const ratio = Number(m[1]) / Number(m[2]);
+  if (!Number.isFinite(ratio) || ratio <= 0) return undefined;
+  let best = OPENAI_ASPECTS[0];
+  for (const c of OPENAI_ASPECTS) {
+    if (Math.abs(Math.log(c.r) - Math.log(ratio)) < Math.abs(Math.log(best.r) - Math.log(ratio))) best = c;
+  }
+  return best.s;
+}
+
 export const openrouter = {
   id: 'openrouter',
   label: 'OpenRouter',
@@ -60,7 +82,9 @@ export const openrouter = {
     // image,text modalities") — so their references go in the Images `image` field.
     if (urls.length && usesChatCompletions(ctx.providerSlug)) return submitWithReference(req, ctx, urls);
 
-    const { aspect, resolution } = normSize(req);
+    let { aspect, resolution } = normSize(req);
+    const isOpenai = /^openai\//.test(ctx.providerSlug);
+    if (isOpenai) { aspect = clampAspectForOpenai(aspect); resolution = undefined; } // OpenAI rejects 16:9/9:16/… and any resolution
     const payload = { model: ctx.providerSlug, prompt: req.prompt };
     if (aspect) payload.aspect_ratio = aspect;
     if (resolution) payload.resolution = resolution;

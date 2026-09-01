@@ -68,8 +68,15 @@ export default function MediaGrid({ type, onOpen, onError, onSaveAsset, listRef 
     };
     const id = setInterval(poll, 2000);
     const onGen = () => poll();
+    // A job deleted from the lightbox (or elsewhere) — drop it from the grid.
+    const onDel = (e) => { if (mapRef.current.delete(e.detail)) rebuild(); };
     window.addEventListener('jenai:generated', onGen);
-    return () => { clearInterval(id); window.removeEventListener('jenai:generated', onGen); };
+    window.addEventListener('jenai:deleted', onDel);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('jenai:generated', onGen);
+      window.removeEventListener('jenai:deleted', onDel);
+    };
   }, [currentProject, type, rebuild]);
 
   // Infinite scroll.

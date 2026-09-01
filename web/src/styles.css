@@ -462,6 +462,8 @@ a { color: inherit; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-danger { background: #d92d3f; color: #fff; }
 .btn-danger:hover { filter: brightness(1.08); }
+.lb-delete { color: #d92d3f; border-color: rgba(217, 45, 63, .4); }
+.lb-delete:hover { background: #d92d3f; border-color: #d92d3f; color: #fff; }
 .modal.dialog { width: min(440px, 100%); }
 .modal-shell.danger { background: linear-gradient(90deg, #d92d3f, #f26a1b); }
 .input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-2); outline: none; font-size: 15px; }
